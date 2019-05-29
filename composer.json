@@ -1,0 +1,28 @@
+{
+    "name": "aternos/lock",
+    "description": "Distributed exclusive and shared resource locking based on etcd",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Matthias Neid",
+            "email": "matthias@aternos.org"
+        }
+    ],
+    "require": {
+        "aternos/etcd": "^1.0",
+        "ext-json": "*",
+        "php": ">=7.0.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Aternos\\Lock\\": "src/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit test"
+    }
+}
