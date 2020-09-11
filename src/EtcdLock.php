@@ -4,6 +4,7 @@ namespace Aternos\Lock;
 
 use Aternos\Etcd\Client;
 use Aternos\Etcd\ClientInterface;
+use Aternos\Etcd\Exception\Status\DeadlineExceededException;
 use Aternos\Etcd\Exception\Status\InvalidResponseStatusCodeException;
 use Aternos\Etcd\Exception\Status\UnavailableException;
 use stdClass;
@@ -428,7 +429,7 @@ class EtcdLock implements LockInterface
                 try {
                     $result = static::getClient()->deleteIf($this->etcdKey, $previousLocks, !$delayRetry);
                     break;
-                } catch (UnavailableException $e) {
+                } catch (UnavailableException|DeadlineExceededException $e) {
                     if ($i === static::$maxUnavailableRetries) {
                         throw $e;
                     } else {
@@ -444,7 +445,7 @@ class EtcdLock implements LockInterface
                 try {
                     $result = static::getClient()->putIf($this->etcdKey, $lockString, $previousLocks, !$delayRetry);
                     break;
-                } catch (UnavailableException $e) {
+                } catch (UnavailableException|DeadlineExceededException $e) {
                     if ($i === static::$maxUnavailableRetries) {
                         throw $e;
                     } else {
@@ -520,7 +521,7 @@ class EtcdLock implements LockInterface
             try {
                 $etcdLockString = static::getClient()->get($this->etcdKey);
                 break;
-            } catch (UnavailableException $e) {
+            } catch (UnavailableException|DeadlineExceededException $e) {
                 if ($i === static::$maxUnavailableRetries) {
                     throw $e;
                 } else {
