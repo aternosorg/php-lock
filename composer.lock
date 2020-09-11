@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a9203a10998e38ff21b7db19734bcbf6",
+    "content-hash": "5da5f4ae05896636c0dcb1e72a32cf91",
     "packages": [
         {
             "name": "aternos/etcd",
-            "version": "v1.4.2",
+            "version": "v1.4.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aternosorg/php-etcd.git",
-                "reference": "ac000930695b2c1019172db428455a6d863a6186"
+                "reference": "bcbdbe44213a463ec90f3b41c8748552f2aa9f5f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aternosorg/php-etcd/zipball/ac000930695b2c1019172db428455a6d863a6186",
-                "reference": "ac000930695b2c1019172db428455a6d863a6186",
+                "url": "https://api.github.com/repos/aternosorg/php-etcd/zipball/bcbdbe44213a463ec90f3b41c8748552f2aa9f5f",
+                "reference": "bcbdbe44213a463ec90f3b41c8748552f2aa9f5f",
                 "shasum": ""
             },
             "require": {
@@ -44,7 +44,7 @@
                 }
             ],
             "description": "PHP gRPC client for etcd v3",
-            "time": "2020-09-11T12:15:40+00:00"
+            "time": "2020-09-11T13:02:10+00:00"
         },
         {
             "name": "flexihash/flexihash",
@@ -971,16 +971,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "9.3.8",
+            "version": "9.3.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "93d78d8e2a06393a0d0c1ead6fe9984f1af1f88c"
+                "reference": "60c90ba713075e83bd039db4760226df7ad9a5cb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/93d78d8e2a06393a0d0c1ead6fe9984f1af1f88c",
-                "reference": "93d78d8e2a06393a0d0c1ead6fe9984f1af1f88c",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/60c90ba713075e83bd039db4760226df7ad9a5cb",
+                "reference": "60c90ba713075e83bd039db4760226df7ad9a5cb",
                 "shasum": ""
             },
             "require": {
@@ -994,7 +994,7 @@
                 "myclabs/deep-copy": "^1.10.1",
                 "phar-io/manifest": "^2.0.1",
                 "phar-io/version": "^3.0.2",
-                "php": "^7.3 || ^8.0",
+                "php": ">=7.3",
                 "phpspec/prophecy": "^1.11.1",
                 "phpunit/php-code-coverage": "^9.1.5",
                 "phpunit/php-file-iterator": "^3.0.4",
@@ -1066,7 +1066,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2020-08-27T06:30:58+00:00"
+            "time": "2020-09-11T12:42:34+00:00"
         },
         {
             "name": "sebastian/cli-parser",

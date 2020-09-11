@@ -10,7 +10,7 @@
         }
     ],
     "require": {
-        "aternos/etcd": "^1.4.2",
+        "aternos/etcd": "^1.4.3",
         "ext-json": "*",
         "php": ">=7.0.0"
     },
