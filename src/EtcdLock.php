@@ -3,6 +3,7 @@
 namespace Aternos\Lock;
 
 use Aternos\Etcd\Client;
+use Aternos\Etcd\ClientInterface;
 use Aternos\Etcd\Exception\Status\InvalidResponseStatusCodeException;
 use Aternos\Etcd\Exception\Status\UnavailableException;
 use stdClass;
@@ -17,7 +18,7 @@ class EtcdLock implements LockInterface
     /**
      * see EtcdLock::setClient()
      *
-     * @var Client
+     * @var ClientInterface
      */
     protected static $client = null;
 
@@ -75,9 +76,9 @@ class EtcdLock implements LockInterface
      *
      * Uses a localhost client if not set
      *
-     * @param Client $client
+     * @param ClientInterface $client
      */
-    public static function setClient(Client $client)
+    public static function setClient(ClientInterface $client)
     {
         static::$client = $client;
     }
@@ -476,9 +477,9 @@ class EtcdLock implements LockInterface
     /**
      * Get an Aternos\Etcd\Client instance
      *
-     * @return Client
+     * @return ClientInterface
      */
-    protected function getClient(): Client
+    protected function getClient(): ClientInterface
     {
         if (static::$client === null) {
             static::$client = new Client();
