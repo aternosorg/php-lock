@@ -10,12 +10,12 @@
         }
     ],
     "require": {
-        "aternos/etcd": "^1.0",
+        "aternos/etcd": "^1.4.2",
         "ext-json": "*",
         "php": ">=7.0.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "^7.5"
+        "phpunit/phpunit": "^9.0.0"
     },
     "autoload": {
         "psr-4": {
