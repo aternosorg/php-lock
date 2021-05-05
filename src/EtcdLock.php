@@ -235,6 +235,13 @@ class EtcdLock implements LockInterface
     protected $retries = 0;
 
     /**
+     * Automatically try to break the lock on destruct if possible
+     *
+     * @var bool
+     */
+    protected $breakOnDestruct = true;
+
+    /**
      * Create a lock
      *
      * @param string $key Can be anything, should describe the resource in a unique way
@@ -293,6 +300,26 @@ class EtcdLock implements LockInterface
         }
 
         return false;
+    }
+
+    /**
+     * Get the used identifier for this lock
+     *
+     * @return string
+     */
+    public function getIdentifier(): ?string
+    {
+        return $this->identifier;
+    }
+
+    /**
+     * Dis/enable automatic lock break on object destruct
+     *
+     * @param bool $breakOnDestruct
+     */
+    public function setBreakOnDestruct(bool $breakOnDestruct): void
+    {
+        $this->breakOnDestruct = $breakOnDestruct;
     }
 
     /**
@@ -559,7 +586,7 @@ class EtcdLock implements LockInterface
      */
     public function __destruct()
     {
-        if ($this->isLocked()) {
+        if ($this->breakOnDestruct && $this->isLocked()) {
             $this->break();
         }
     }
