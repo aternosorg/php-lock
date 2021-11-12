@@ -223,7 +223,7 @@ class Lock
     /**
      * Current parsed locks
      *
-     * @var array
+     * @var LockEntry[]
      */
     protected array $locks = [];
 
@@ -303,9 +303,9 @@ class Lock
      */
     public function isLocked(): bool|int
     {
-        foreach ($this->locks as $i => $lock) {
-            if ($lock->by === $this->identifier) {
-                $remaining = $this->locks[$i]->until - time();
+        foreach ($this->locks as $lock) {
+            if ($lock->isBy($this->identifier)) {
+                $remaining = $lock->getRemainingTime();
                 return ($remaining > 0) ? $remaining : false;
             }
         }
@@ -383,16 +383,11 @@ class Lock
     /**
      * Generate the lock object
      *
-     * @return stdClass
+     * @return LockEntry
      */
-    protected function generateLock(): stdClass
+    protected function generateLock(): LockEntry
     {
-        $lock = new stdClass();
-        $lock->by = $this->identifier;
-        $lock->until = time() + $this->time;
-        $lock->exclusive = $this->exclusive;
-
-        return $lock;
+        return new LockEntry($this->identifier, time() + $this->time, $this->exclusive);
     }
 
     /**
@@ -406,7 +401,7 @@ class Lock
     {
         do {
             foreach ($this->locks as $i => $lock) {
-                if ($lock->by === $this->identifier) {
+                if ($lock->isBy($this->identifier)) {
                     unset($this->locks[$i]);
                 }
             }
@@ -426,9 +421,9 @@ class Lock
      */
     protected function addOrUpdateLock(): bool
     {
-        foreach ($this->locks as $i => $lock) {
-            if ($lock->by === $this->identifier) {
-                $this->locks[$i]->until = time() + $this->time;
+        foreach ($this->locks as $lock) {
+            if ($lock->isBy($this->identifier)) {
+                $lock->setRemaining($this->time);
                 return $this->saveLocks();
             }
         }
@@ -456,7 +451,7 @@ class Lock
         $previousLocks = $this->previousLockString;
 
         foreach ($this->locks as $i => $lock) {
-            if ($lock->until < time()) {
+            if ($lock->isExpired()) {
                 unset($this->locks[$i]);
             }
         }
@@ -537,11 +532,11 @@ class Lock
     protected function canLock(): bool
     {
         foreach ($this->locks as $lock) {
-            if ($lock->by !== $this->identifier && $lock->exclusive && $lock->until >= time()) {
+            if (!$lock->isBy($this->identifier) && $lock->isExclusive() && !$lock->isExpired()) {
                 return false;
             }
 
-            if ($lock->by !== $this->identifier && $this->exclusive && $lock->until >= time()) {
+            if (!$lock->isBy($this->identifier) && $this->exclusive && !$lock->isExpired()) {
                 return false;
             }
         }
@@ -584,7 +579,7 @@ class Lock
         $this->previousLockString = $lockString;
 
         if ($lockString) {
-            $this->locks = json_decode($lockString);
+            $this->locks = LockEntry::fromJson($lockString);
         } else {
             $this->locks = [];
         }
