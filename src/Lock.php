@@ -265,7 +265,6 @@ class Lock
      */
     public function lock(bool $exclusive = false, int $time = 120, int $wait = 300, string $identifier = null): bool
     {
-        $startTime = time();
         $this->exclusive = $exclusive;
         $this->time = $time;
 
@@ -278,15 +277,10 @@ class Lock
             $this->identifier = $identifier;
         }
 
-        $this->update();
         $this->retries = 0;
 
         do {
-            while (!$this->canLock() && $startTime + $wait > time()) {
-                sleep(static::$waitRetryInterval);
-                $this->update();
-            }
-
+            $this->waitForOtherLocks($wait, $exclusive);
             $retry = false;
             if ($this->canLock()) {
                 $retry = !$this->addOrUpdateLock();
@@ -294,6 +288,26 @@ class Lock
         } while ($retry);
 
         return !!$this->isLocked();
+    }
+
+    /**
+     * @param int $wait
+     * @param bool $exclusive
+     * @return bool
+     * @throws InvalidResponseStatusCodeException
+     */
+    public function waitForOtherLocks(int $wait = 300, bool $exclusive = false): bool
+    {
+        $startTime = time();
+        $this->exclusive = $exclusive;
+        $this->update();
+
+        while (!$this->canLock() && $startTime + $wait > time()) {
+            sleep(static::$waitRetryInterval);
+            $this->update();
+        }
+
+        return $this->canLock();
     }
 
     /**
