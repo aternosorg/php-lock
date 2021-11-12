@@ -597,4 +597,44 @@ class Lock
             $this->break();
         }
     }
+
+    /**
+     * @return LockEntry[]
+     */
+    public function getLocks(): array
+    {
+        return $this->locks;
+    }
+
+    /**
+     * Check if lock is acquired by a different process
+     *
+     * @return bool
+     */
+    public function isLockedByOther(): bool
+    {
+        foreach ($this->getLocks() as $lock) {
+            if ($lock->isExpired() || $lock->isBy($this->getIdentifier())) {
+                continue;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Check if lock is acquired exclusively by a different process
+     *
+     * @return bool
+     */
+    public function isLockedByOtherExclusively(): bool
+    {
+        foreach ($this->getLocks() as $lock) {
+            if ($lock->isExpired() || $lock->isBy($this->getIdentifier()) || !$lock->isExclusive()) {
+                continue;
+            }
+            return true;
+        }
+        return false;
+    }
 }
