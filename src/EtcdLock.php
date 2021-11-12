@@ -20,58 +20,58 @@ class EtcdLock implements LockInterface
     /**
      * see EtcdLock::setClient()
      *
-     * @var ClientInterface
+     * @var ClientInterface|null
      */
-    protected static $client = null;
+    protected static ?ClientInterface $client = null;
 
     /**
      * see EtcdLock::setPrefix()
      *
      * @var string
      */
-    protected static $prefix = "lock/";
+    protected static string $prefix = "lock/";
 
     /**
      * see EtcdLock::setDefaultIdentifier()
      *
-     * @var string
+     * @var string|null
      */
-    protected static $defaultIdentifier = null;
+    protected static ?string $defaultIdentifier = null;
 
     /**
      * see EtcdLock::setWaitRetryInterval()
      *
      * @var int
      */
-    protected static $waitRetryInterval = 1;
+    protected static int $waitRetryInterval = 1;
 
     /**
      * see EtcdLock::setMaxSaveRetries()
      *
      * @var int
      */
-    protected static $maxSaveRetries = 100;
+    protected static int $maxSaveRetries = 100;
 
     /**
      * see EtcdLock::setMaxDelayPerSaveRetry()
      *
      * @var int
      */
-    protected static $maxDelayPerSaveRetry = 1000;
+    protected static int $maxDelayPerSaveRetry = 1000;
 
     /**
      * see EtcdLock::setMaxUnavailableRetries()
      *
      * @var int
      */
-    protected static $maxUnavailableRetries = 3;
+    protected static int $maxUnavailableRetries = 3;
 
     /**
      * see EtcdLock::setDelayPerUnavailableRetry()
      *
      * @var int
      */
-    protected static $delayPerUnavailableRetry = 1;
+    protected static int $delayPerUnavailableRetry = 1;
 
     /**
      * Set the etcd client (Aternos\Etcd\Client)
@@ -80,7 +80,7 @@ class EtcdLock implements LockInterface
      *
      * @param ClientInterface $client
      */
-    public static function setClient(ClientInterface $client)
+    public static function setClient(ClientInterface $client): void
     {
         static::$client = $client;
     }
@@ -90,7 +90,7 @@ class EtcdLock implements LockInterface
      *
      * @param string $prefix
      */
-    public static function setPrefix(string $prefix)
+    public static function setPrefix(string $prefix): void
     {
         static::$prefix = $prefix;
     }
@@ -104,9 +104,9 @@ class EtcdLock implements LockInterface
      *
      * Can be set individually on every lock if necessary (see EtcdLock::__construct).
      *
-     * @param string $defaultIdentifier
+     * @param string|null $defaultIdentifier
      */
-    public static function setDefaultIdentifier(string $defaultIdentifier = null)
+    public static function setDefaultIdentifier(?string $defaultIdentifier = null): void
     {
         if ($defaultIdentifier === null) {
             $defaultIdentifier = uniqid();
@@ -119,7 +119,7 @@ class EtcdLock implements LockInterface
      *
      * @param int $interval
      */
-    public static function setWaitRetryInterval(int $interval)
+    public static function setWaitRetryInterval(int $interval): void
     {
         static::$waitRetryInterval = $interval;
     }
@@ -131,7 +131,7 @@ class EtcdLock implements LockInterface
      *
      * @param int $retries
      */
-    public static function setMaxSaveRetries(int $retries)
+    public static function setMaxSaveRetries(int $retries): void
     {
         static::$maxSaveRetries = $retries;
     }
@@ -146,7 +146,7 @@ class EtcdLock implements LockInterface
      *
      * @param int $delayPerRetry
      */
-    public static function setMaxDelayPerSaveRetry(int $delayPerRetry)
+    public static function setMaxDelayPerSaveRetry(int $delayPerRetry): void
     {
         static::$maxDelayPerSaveRetry = $delayPerRetry;
     }
@@ -156,7 +156,7 @@ class EtcdLock implements LockInterface
      *
      * @param int $retries
      */
-    public static function setMaxUnavailableRetries(int $retries)
+    public static function setMaxUnavailableRetries(int $retries): void
     {
         static::$maxUnavailableRetries = $retries;
     }
@@ -166,7 +166,7 @@ class EtcdLock implements LockInterface
      *
      * @param int $delayPerRetry
      */
-    public static function setDelayPerUnavailableRetry(int $delayPerRetry)
+    public static function setDelayPerUnavailableRetry(int $delayPerRetry): void
     {
         static::$delayPerUnavailableRetry = $delayPerRetry;
     }
@@ -176,39 +176,39 @@ class EtcdLock implements LockInterface
      *
      * Probably the same as EtcdLock::$defaultIdentifier if not overwritten in EtcdLock::__construct()
      *
-     * @var string
+     * @var string|null
      */
-    protected $identifier;
+    protected ?string $identifier = null;
 
     /**
      * Unique key for the resource
      *
-     * @var string
+     * @var string|null
      */
-    protected $key;
+    protected ?string $key = null;
 
     /**
      * Timeout time of the lock
      *
      * The lock will be released if this timeout is reached
      *
-     * @var int
+     * @var int|null
      */
-    protected $time;
+    protected ?int $time = null;
 
     /**
      * Is this an exclusive lock (true) or shared (false)
      *
      * @var bool
      */
-    protected $exclusive;
+    protected bool $exclusive = false;
 
     /**
      * Full name of the key in etcd (prefix + key)
      *
-     * @var string
+     * @var string|null
      */
-    protected $etcdKey;
+    protected ?string $etcdKey = null;
 
     /**
      * Used to store the previous lock string
@@ -216,30 +216,30 @@ class EtcdLock implements LockInterface
      * Will be used in deleteIf and putIf requests to check
      * if there was no change in etcd while processing the lock
      *
-     * @var string
+     * @var string|bool
      */
-    protected $previousLockString;
+    protected string|bool $previousLockString = false;
 
     /**
      * Current parsed locks
      *
      * @var array
      */
-    protected $locks = [];
+    protected array $locks = [];
 
     /**
      * Retry counter
      *
      * @var int
      */
-    protected $retries = 0;
+    protected int $retries = 0;
 
     /**
      * Automatically try to break the lock on destruct if possible
      *
      * @var bool
      */
-    protected $breakOnDestruct = true;
+    protected bool $breakOnDestruct = true;
 
     /**
      * Create a lock
@@ -290,7 +290,7 @@ class EtcdLock implements LockInterface
      *
      * @return bool|int
      */
-    public function isLocked()
+    public function isLocked(): bool|int
     {
         foreach ($this->locks as $i => $lock) {
             if ($lock->by === $this->identifier) {
@@ -305,7 +305,7 @@ class EtcdLock implements LockInterface
     /**
      * Get the used identifier for this lock
      *
-     * @return string
+     * @return string|null
      */
     public function getIdentifier(): ?string
     {
@@ -331,7 +331,7 @@ class EtcdLock implements LockInterface
      * @throws InvalidResponseStatusCodeException
      * @throws TooManySaveRetriesException
      */
-    public function refresh(int $time = 60, int $remainingThreshold = 30)
+    public function refresh(int $time = 60, int $remainingThreshold = 30): bool
     {
         if ($remainingThreshold > 0 && $this->isLocked() > $remainingThreshold) {
             return true;
@@ -348,6 +348,7 @@ class EtcdLock implements LockInterface
 
             $retry = !$this->addOrUpdateLock();
         } while ($retry);
+        return true;
     }
 
     /**
@@ -359,7 +360,7 @@ class EtcdLock implements LockInterface
      * @throws InvalidResponseStatusCodeException
      * @throws TooManySaveRetriesException
      */
-    public function break()
+    public function break(): bool
     {
         $this->update();
         $this->retries = 0;
@@ -373,7 +374,7 @@ class EtcdLock implements LockInterface
      *
      * @return stdClass
      */
-    protected function generateLock()
+    protected function generateLock(): stdClass
     {
         $lock = new stdClass();
         $lock->by = $this->identifier;
@@ -390,7 +391,7 @@ class EtcdLock implements LockInterface
      * @throws InvalidResponseStatusCodeException
      * @throws TooManySaveRetriesException
      */
-    protected function removeLock()
+    protected function removeLock(): bool
     {
         do {
             foreach ($this->locks as $i => $lock) {
@@ -400,7 +401,7 @@ class EtcdLock implements LockInterface
             }
             $success = $this->saveLocks();
         } while ($success === false);
-        return $success;
+        return true;
     }
 
     /**
@@ -412,7 +413,7 @@ class EtcdLock implements LockInterface
      * @throws InvalidResponseStatusCodeException
      * @throws TooManySaveRetriesException
      */
-    protected function addOrUpdateLock()
+    protected function addOrUpdateLock(): bool
     {
         foreach ($this->locks as $i => $lock) {
             if ($lock->by === $this->identifier) {
@@ -439,7 +440,7 @@ class EtcdLock implements LockInterface
      * @throws InvalidResponseStatusCodeException
      * @throws TooManySaveRetriesException
      */
-    protected function saveLocks()
+    protected function saveLocks(): bool
     {
         $previousLocks = $this->previousLockString;
 
@@ -522,7 +523,7 @@ class EtcdLock implements LockInterface
      *
      * @return bool
      */
-    protected function canLock()
+    protected function canLock(): bool
     {
         foreach ($this->locks as $lock) {
             if ($lock->by !== $this->identifier && $lock->exclusive && $lock->until >= time()) {
@@ -542,7 +543,7 @@ class EtcdLock implements LockInterface
      *
      * @throws InvalidResponseStatusCodeException
      */
-    protected function update()
+    protected function update(): void
     {
         $etcdLockString = false;
         for ($i = 1; $i <= static::$maxUnavailableRetries; $i++) {
@@ -567,7 +568,7 @@ class EtcdLock implements LockInterface
      *
      * @param string|bool $lockString
      */
-    protected function updateFromString($lockString)
+    protected function updateFromString(string|bool $lockString): void
     {
         $this->previousLockString = $lockString;
 

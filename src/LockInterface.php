@@ -25,23 +25,23 @@ interface LockInterface
      *
      * @return bool|int
      */
-    public function isLocked();
+    public function isLocked(): bool|int;
 
     /**
      * Refresh the lock
      *
      * @param int $time
      * @param int $remainingThreshold
-     * @return boolean
+     * @return bool
      */
-    public function refresh(int $time = 60, int $remainingThreshold = 30);
+    public function refresh(int $time = 60, int $remainingThreshold = 30): bool;
 
     /**
      * Break the lock
      *
      * Should be only used if you have the lock
      *
-     * @return boolean
+     * @return bool
      */
-    public function break();
+    public function break(): bool;
 }
