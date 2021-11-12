@@ -11,63 +11,63 @@ use Aternos\Etcd\Exception\Status\UnknownException;
 use stdClass;
 
 /**
- * Class EtcdLock
+ * Class Lock
  *
  * @package Aternos\Lock
  */
 class Lock
 {
     /**
-     * see EtcdLock::setClient()
+     * see Lock::setClient()
      *
      * @var ClientInterface|null
      */
     protected static ?ClientInterface $client = null;
 
     /**
-     * see EtcdLock::setPrefix()
+     * see Lock::setPrefix()
      *
      * @var string
      */
     protected static string $prefix = "lock/";
 
     /**
-     * see EtcdLock::setDefaultIdentifier()
+     * see Lock::setDefaultIdentifier()
      *
      * @var string|null
      */
     protected static ?string $defaultIdentifier = null;
 
     /**
-     * see EtcdLock::setWaitRetryInterval()
+     * see Lock::setWaitRetryInterval()
      *
      * @var int
      */
     protected static int $waitRetryInterval = 1;
 
     /**
-     * see EtcdLock::setMaxSaveRetries()
+     * see Lock::setMaxSaveRetries()
      *
      * @var int
      */
     protected static int $maxSaveRetries = 100;
 
     /**
-     * see EtcdLock::setMaxDelayPerSaveRetry()
+     * see Lock::setMaxDelayPerSaveRetry()
      *
      * @var int
      */
     protected static int $maxDelayPerSaveRetry = 1000;
 
     /**
-     * see EtcdLock::setMaxUnavailableRetries()
+     * see Lock::setMaxUnavailableRetries()
      *
      * @var int
      */
     protected static int $maxUnavailableRetries = 3;
 
     /**
-     * see EtcdLock::setDelayPerUnavailableRetry()
+     * see Lock::setDelayPerUnavailableRetry()
      *
      * @var int
      */
@@ -102,7 +102,7 @@ class Lock
      * enough to never be the same. Can be created with uniqid(). Will fallback to uniqid().
      * If there is already a lock with the same identifier, that lock is used for this lock.
      *
-     * Can be set individually on every lock if necessary (see EtcdLock::__construct).
+     * Can be set individually on every lock if necessary (see Lock::__construct).
      *
      * @param string|null $defaultIdentifier
      */
@@ -174,7 +174,7 @@ class Lock
     /**
      * Identifier of the current lock
      *
-     * Probably the same as EtcdLock::$defaultIdentifier if not overwritten in EtcdLock::__construct()
+     * Probably the same as Lock::$defaultIdentifier if not overwritten in Lock::__construct()
      *
      * @var string|null
      */
@@ -418,7 +418,7 @@ class Lock
     /**
      * Add a lock to the locking array or update the current lock
      *
-     * A 'false' return value can/should be retried, see EtcdLock::saveLocks()
+     * A 'false' return value can/should be retried, see Lock::saveLocks()
      *
      * @return bool
      * @throws InvalidResponseStatusCodeException

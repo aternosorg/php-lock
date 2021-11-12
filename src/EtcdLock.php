@@ -21,7 +21,7 @@ class EtcdLock extends Lock implements LockInterface
      * @param bool $exclusive Should the lock be exclusive (true) or shared (false)
      * @param int $time Time until the lock should be released automatically
      * @param int $wait Time to wait for an existing lock to get released
-     * @param string|null $identifier An identifier (if different from EtcdLock::$defaultIdentifier, see EtcdLock::setDefaultIdentifier())
+     * @param string|null $identifier An identifier (if different from Lock::$defaultIdentifier, see Lock::setDefaultIdentifier())
      * @throws InvalidResponseStatusCodeException
      * @throws TooManySaveRetriesException
      */
