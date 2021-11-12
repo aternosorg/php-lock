@@ -30,17 +30,17 @@ composer require aternos/lock
 ```
 
 ## Usage
-The most important class is the [`EtcdLock`](src/EtcdLock.php) class. Each instance of this class represents
+The most important class is the [`Lock`](src/Lock.php) class. Each instance of this class represents
 one lock on a resource that is identified by a key. There are also several static functions to set options
 for all locks, but all of them have default values, so you can just start by creating a lock:
 
 ```php
 <?php
 
-$lock = new \Aternos\Lock\EtcdLock("key");
+$lock = new \Aternos\Lock\Lock("key");
 
-// check if the lock was successful
-if($lock->isLocked()) {
+// try to acquire lock
+if($lock->lock()) {
     // do something
 } else {
     // error/exit
@@ -56,7 +56,7 @@ lock like this:
 ```php
 <?php 
 
-$lock = new \Aternos\Lock\EtcdLock("key", true);
+$lock->lock(true);
 ```
 
 ### Locking time(out) and refreshing
@@ -68,7 +68,7 @@ the remaining locking time is below this threshold. This avoids spamming etcd wi
 ```php
 <?php 
 
-$lock = new \Aternos\Lock\EtcdLock("key", true, 60); // 60 seconds timeout
+$lock->lock(true, 60); // 60 seconds timeout
 
 // refresh the lock (with default values)
 $lock->refresh();
@@ -88,7 +88,7 @@ time to wait for other locks:
 ```php
 <?php 
 
-$lock = new \Aternos\Lock\EtcdLock("key", true, 60, 300); // wait 300 seconds for other locks
+$lock->lock(true, 60, 300); // wait 300 seconds for other locks
 
 // check if the lock was actually acquired or if the wait timeout was reached
 if($lock->isLocked()) {
@@ -105,7 +105,7 @@ a lock like this:
 ```php
 <?php
 
-$lock = new \Aternos\Lock\EtcdLock("key");
+$lock = new \Aternos\Lock\Lock("key");
 
 // check if the lock was successful
 if($lock->isLocked()) {
@@ -130,18 +130,18 @@ the default identifier on a specific lock:
 ```php
 <?php
 
-\Aternos\Lock\EtcdLock::setDefaultIdentifier("default-identifier");
+\Aternos\Lock\Lock::setDefaultIdentifier("default-identifier");
 
 // uses the previously set "default-identifier"
-$lock = new \Aternos\Lock\EtcdLock("key"); 
+$lock->lock();
 
 // overwrites the "default-identifier" with "different-identifier"
-$lock = new \Aternos\Lock\EtcdLock("key", true, 60, 300, "different-identifier"); 
+$lock->lock(true, 60, 300, "different-identifier");
 ```
 
 ### Settings
 The default identifier above is already one of the static settings, which you can specify for all locks. All settings 
-are stored in protected static fields in the [`EtcdLock`](src/EtcdLock.php) class (at the top) and have their own static
+are stored in protected static fields in the [`Lock`](src/Lock.php) class (at the top) and have their own static
 setter functions. Below are only a few important ones, but you can read the PHPDoc function comments for further explanations
 of the other settings. Only change those if you know what you are doing.
 
@@ -156,7 +156,7 @@ $client = new Aternos\Etcd\Client();
 $client = new Aternos\Etcd\Client("localhost:2379");
 $client = new Aternos\Etcd\Client("localhost:2379", "username", "password");
 
-\Aternos\Lock\EtcdLock::setClient($client);
+\Aternos\Lock\Lock::setClient($client);
 ```
 
 #### Etcd key prefix
@@ -166,5 +166,5 @@ The default prefix is `lock/`.
 ```php
 <?php
 
-\Aternos\Lock\EtcdLock::setPrefix("my-prefix/");
+\Aternos\Lock\Lock::setPrefix("my-prefix/");
 ```
