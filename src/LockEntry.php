@@ -79,11 +79,14 @@ class LockEntry implements \JsonSerializable
     }
 
     /**
-     * @param string $identifier
+     * @param string|null $identifier
      * @return bool
      */
-    public function isBy(string $identifier): bool
+    public function isBy(?string $identifier): bool
     {
+        if ($identifier === null) {
+            return false;
+        }
         return $this->getBy() === $identifier;
     }
 
