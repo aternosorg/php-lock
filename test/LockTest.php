@@ -19,7 +19,7 @@ class LockTest extends TestCase
      * @throws InvalidResponseStatusCodeException
      * @throws TooManySaveRetriesException
      */
-    public function testCreateLock()
+    public function testCreateLock(): void
     {
         $key = $this->getRandomString();
         $identifier = $this->getRandomString();
@@ -34,7 +34,7 @@ class LockTest extends TestCase
      * @throws InvalidResponseStatusCodeException
      * @throws TooManySaveRetriesException
      */
-    public function testCreateEtcdLock()
+    public function testCreateEtcdLock(): void
     {
         $key = $this->getRandomString();
         $identifier = $this->getRandomString();
@@ -49,7 +49,7 @@ class LockTest extends TestCase
      * @throws TooManySaveRetriesException
      * @throws InvalidResponseStatusCodeException
      */
-    public function testBreakLock()
+    public function testBreakLock(): void
     {
         $key = $this->getRandomString();
         $identifier = $this->getRandomString();
@@ -64,7 +64,7 @@ class LockTest extends TestCase
      * @throws InvalidResponseStatusCodeException
      * @throws TooManySaveRetriesException
      */
-    public function testAutoReleaseLock()
+    public function testAutoReleaseLock(): void
     {
         $key = $this->getRandomString();
         $identifier = $this->getRandomString();
@@ -81,7 +81,7 @@ class LockTest extends TestCase
      * @throws TooManySaveRetriesException
      * @throws InvalidResponseStatusCodeException
      */
-    public function testRefreshLock()
+    public function testRefreshLock(): void
     {
         $key = $this->getRandomString();
         $identifier = $this->getRandomString();
@@ -101,7 +101,7 @@ class LockTest extends TestCase
      * @throws TooManySaveRetriesException
      * @throws InvalidResponseStatusCodeException
      */
-    public function testRefreshLockThreshold()
+    public function testRefreshLockThreshold(): void
     {
         $key = $this->getRandomString();
         $identifier = $this->getRandomString();
@@ -123,7 +123,7 @@ class LockTest extends TestCase
      * @throws TooManySaveRetriesException
      * @throws InvalidResponseStatusCodeException
      */
-    public function testMultipleSharedLocks()
+    public function testMultipleSharedLocks(): void
     {
         $key = $this->getRandomString();
         $identifierA = $this->getRandomString();
@@ -158,7 +158,7 @@ class LockTest extends TestCase
      * @throws TooManySaveRetriesException
      * @throws InvalidResponseStatusCodeException
      */
-    public function testExclusiveLock()
+    public function testExclusiveLock(): void
     {
         $key = $this->getRandomString();
         $identifier = $this->getRandomString();
@@ -175,7 +175,7 @@ class LockTest extends TestCase
      * @throws TooManySaveRetriesException
      * @throws InvalidResponseStatusCodeException
      */
-    public function testWaitForExclusiveLockAfterExclusiveLock()
+    public function testWaitForExclusiveLockAfterExclusiveLock(): void
     {
         $key = $this->getRandomString();
         $identifierA = $this->getRandomString();
@@ -194,7 +194,7 @@ class LockTest extends TestCase
      * @throws TooManySaveRetriesException
      * @throws InvalidResponseStatusCodeException
      */
-    public function testRejectSharedLockWhileExclusiveLock()
+    public function testRejectSharedLockWhileExclusiveLock(): void
     {
         $key = $this->getRandomString();
         $identifierA = $this->getRandomString();
@@ -213,7 +213,7 @@ class LockTest extends TestCase
      * @throws TooManySaveRetriesException
      * @throws InvalidResponseStatusCodeException
      */
-    public function testRejectExclusiveLockWhileSharedLock()
+    public function testRejectExclusiveLockWhileSharedLock(): void
     {
         $key = $this->getRandomString();
         $identifierA = $this->getRandomString();
@@ -232,7 +232,7 @@ class LockTest extends TestCase
      * @throws TooManySaveRetriesException
      * @throws InvalidResponseStatusCodeException
      */
-    public function testWaitForExclusiveLockAfterMultipleSharedLocks()
+    public function testWaitForExclusiveLockAfterMultipleSharedLocks(): void
     {
         $key = $this->getRandomString();
         $identifierA = $this->getRandomString();
@@ -262,7 +262,7 @@ class LockTest extends TestCase
      * @throws TooManySaveRetriesException
      * @throws InvalidResponseStatusCodeException
      */
-    public function testLockWriteConflict()
+    public function testLockWriteConflict(): void
     {
         $key = $this->getRandomString();
         $identifierA = $this->getRandomString();
@@ -295,7 +295,7 @@ class LockTest extends TestCase
      * @throws TooManySaveRetriesException
      * @throws InvalidResponseStatusCodeException
      */
-    public function testLockDeleteConflict()
+    public function testLockDeleteConflict(): void
     {
         $key = $this->getRandomString();
         $identifierA = $this->getRandomString();
