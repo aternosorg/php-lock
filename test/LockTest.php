@@ -1,5 +1,7 @@
 <?php
 
+namespace Aternos\Lock\Test;
+
 use Aternos\Etcd\Exception\Status\InvalidResponseStatusCodeException;
 use Aternos\Lock\EtcdLock;
 use Aternos\Lock\Lock;

@@ -22,6 +22,11 @@
             "Aternos\\Lock\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Aternos\\Lock\\Test\\": "test/"
+        }
+    },
     "scripts": {
         "test": "phpunit test"
     }
