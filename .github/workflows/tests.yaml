@@ -1,0 +1,60 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        php-version: [ '8.0', '8.1' ]
+        etcd-version: [ '3.3.27', '3.4.18', '3.5.2' ]
+
+    name: Run tests on PHP v${{ matrix.php-version }} with etcd v${{ matrix.etcd-version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: grpc
+
+      - name: Install etcd
+        run: |
+          wget -q https://github.com/etcd-io/etcd/releases/download/v${{ matrix.etcd-version }}/etcd-v${{ matrix.etcd-version }}-linux-amd64.tar.gz
+          tar -xzf etcd-v${{ matrix.etcd-version }}-linux-amd64.tar.gz
+          sudo mv etcd-v${{ matrix.etcd-version }}-linux-amd64/etcd /usr/bin/etcd
+          
+          if [ ! -e /var/lib/etcd ]; then
+            sudo mkdir /var/lib/etcd
+          fi
+          if [ ! -e /var/log/etcd ]; then
+            sudo mkdir /var/log/etcd
+          fi
+          
+          sudo start-stop-daemon --start -b --exec /usr/bin/etcd
+
+      - name: Set composer cache directory
+        id: composer-cache
+        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+
+      - name: Restore composer from cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Run phpunit tests
+        run: vendor/bin/phpunit --testsuite tests --colors=always --testdox
