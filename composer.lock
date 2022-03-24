@@ -4,26 +4,26 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2ac9139b0fa0f9b6bcded905cf8f6743",
+    "content-hash": "187638b9ac34dfc927553fbb21d11d78",
     "packages": [
         {
             "name": "aternos/etcd",
-            "version": "v1.4.3",
+            "version": "v1.5.0-RC1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aternosorg/php-etcd.git",
-                "reference": "bcbdbe44213a463ec90f3b41c8748552f2aa9f5f"
+                "reference": "c2f61383f2cea97f7c3ccf12062ca093bcf756c4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aternosorg/php-etcd/zipball/bcbdbe44213a463ec90f3b41c8748552f2aa9f5f",
-                "reference": "bcbdbe44213a463ec90f3b41c8748552f2aa9f5f",
+                "url": "https://api.github.com/repos/aternosorg/php-etcd/zipball/c2f61383f2cea97f7c3ccf12062ca093bcf756c4",
+                "reference": "c2f61383f2cea97f7c3ccf12062ca093bcf756c4",
                 "shasum": ""
             },
             "require": {
                 "ext-grpc": "*",
                 "flexihash/flexihash": "^2.0",
-                "google/protobuf": "^v3.12.4",
+                "google/protobuf": "^v3.20@dev",
                 "grpc/grpc": "^1.15"
             },
             "type": "library",
@@ -44,7 +44,11 @@
                 }
             ],
             "description": "PHP gRPC client for etcd v3",
-            "time": "2020-09-11T13:02:10+00:00"
+            "support": {
+                "issues": "https://github.com/aternosorg/php-etcd/issues",
+                "source": "https://github.com/aternosorg/php-etcd/tree/v1.5.0-RC1"
+            },
+            "time": "2022-03-24T13:14:49+00:00"
         },
         {
             "name": "flexihash/flexihash",
@@ -97,20 +101,24 @@
             ],
             "description": "Flexihash is a small PHP library which implements consistent hashing",
             "homepage": "https://github.com/pda/flexihash",
+            "support": {
+                "issues": "https://github.com/pda/flexihash/issues",
+                "source": "https://github.com/pda/flexihash/tree/v2.0.2"
+            },
             "time": "2016-04-22T21:03:23+00:00"
         },
         {
             "name": "google/protobuf",
-            "version": "v3.13.0",
+            "version": "v3.20.0RC2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/protocolbuffers/protobuf-php.git",
-                "reference": "fddc6c2439b190284f207143f6d37bf5b651cea6"
+                "reference": "66aacad932d188d0e3d112743085045846b206d2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/fddc6c2439b190284f207143f6d37bf5b651cea6",
-                "reference": "fddc6c2439b190284f207143f6d37bf5b651cea6",
+                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/66aacad932d188d0e3d112743085045846b206d2",
+                "reference": "66aacad932d188d0e3d112743085045846b206d2",
                 "shasum": ""
             },
             "require": {
@@ -138,24 +146,28 @@
             "keywords": [
                 "proto"
             ],
-            "time": "2020-08-15T00:44:58+00:00"
+            "support": {
+                "issues": "https://github.com/protocolbuffers/protobuf-php/issues",
+                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v3.20.0RC2"
+            },
+            "time": "2022-03-16T20:37:43+00:00"
         },
         {
             "name": "grpc/grpc",
-            "version": "1.30.0",
+            "version": "1.42.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/grpc/grpc-php.git",
-                "reference": "31952d18884d91c674b73f8b4da831f708706f20"
+                "reference": "9fa44f104cb92e924d4da547323a97f3d8aca6d4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/grpc/grpc-php/zipball/31952d18884d91c674b73f8b4da831f708706f20",
-                "reference": "31952d18884d91c674b73f8b4da831f708706f20",
+                "url": "https://api.github.com/repos/grpc/grpc-php/zipball/9fa44f104cb92e924d4da547323a97f3d8aca6d4",
+                "reference": "9fa44f104cb92e924d4da547323a97f3d8aca6d4",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.5.0"
+                "php": ">=7.0.0"
             },
             "require-dev": {
                 "google/auth": "^v1.3.0"
@@ -179,7 +191,10 @@
             "keywords": [
                 "rpc"
             ],
-            "time": "2020-06-23T01:49:02+00:00"
+            "support": {
+                "source": "https://github.com/grpc/grpc-php/tree/v1.42.0"
+            },
+            "time": "2021-11-19T08:13:51+00:00"
         }
     ],
     "packages-dev": [
@@ -2283,7 +2298,7 @@
         }
     ],
     "aliases": [],
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,

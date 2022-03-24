@@ -10,7 +10,7 @@
         }
     ],
     "require": {
-        "aternos/etcd": "^1.4.3",
+        "aternos/etcd": "^1.5.0",
         "ext-json": "*",
         "php": ">=8.0"
     },
@@ -29,5 +29,6 @@
     },
     "scripts": {
         "test": "phpunit test"
-    }
+    },
+    "minimum-stability": "dev"
 }
