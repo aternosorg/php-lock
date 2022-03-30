@@ -320,6 +320,163 @@ class LockTest extends TestCase
         $lockA->break();
         $lockB->break();
     }
+
+    /**
+     * @throws InvalidResponseStatusCodeException
+     * @throws TooManySaveRetriesException
+     */
+    public function testLockFunctionUsesUniqueDefaultIdentifierIfNoIdentifierParameterIsProvided(): void
+    {
+        $lock = new Lock($this->getRandomString());
+
+        # Default identifier is not set explicitly and its default value is null.
+        # (We have to set it to null manually because other tests might have set the default identifier before.)
+        $reflection = new \ReflectionProperty(Lock::class, 'defaultIdentifier');
+        $reflection->setAccessible(true);
+        $reflection->setValue(null);
+        $this->assertNull($reflection->getValue());
+
+        # lock() sets the default identifier to an uniqid()
+        $lock->lock();
+        $defaultIdentifier = $reflection->getValue();
+        $this->assertIsString($defaultIdentifier);
+        $this->assertNotEmpty($defaultIdentifier);
+
+        # and uses the default identifier as identifier because no identifier parameter is provided
+        $this->assertEquals($defaultIdentifier, $lock->getIdentifier());
+
+        $lock->break();
+    }
+
+    /**
+     * @throws InvalidResponseStatusCodeException
+     * @throws TooManySaveRetriesException
+     */
+    public function testLockFunctionUsesThePresetDefaultIdentifierIfNoIdentifierParameterIsProvided(): void
+    {
+        # Default identifier is set
+        Lock::setDefaultIdentifier('testDefaultIdentifier');
+        $lock = new Lock($this->getRandomString());
+        $lock->lock();
+        $this->assertEquals('testDefaultIdentifier', $lock->getIdentifier());
+        $lock->break();
+    }
+
+    /**
+     * @throws InvalidResponseStatusCodeException
+     * @throws TooManySaveRetriesException
+     */
+    public function testBreaksOnDestructWhenBreakOnDestructPropertyIsTrue(): void
+    {
+        # Check that break() and isLocked() are called when breakOnDestruct is set to true
+        $breakingLock = $this->getMockBuilder(Lock::class)
+            ->setConstructorArgs([$this->getRandomString()])
+            ->onlyMethods(['isLocked', 'break'])
+            ->getMock();
+        $breakingLock->setBreakOnDestruct(true);
+        $breakingLock
+            ->expects($this->once())
+            ->method('isLocked')
+            ->willReturn(true);
+        $breakingLock
+            ->expects($this->once())
+            ->method('break');
+
+        $breakingLock->__destruct();
+    }
+
+    /**
+     * @throws InvalidResponseStatusCodeException
+     * @throws TooManySaveRetriesException
+     */
+    public function testDoesNotBreakOnDestructWhenBreakOnDestructPropertyIsFalse(): void
+    {
+        # Check that break() and isLocked() are not called when breakOnDestruct is set to false
+        $notBreakingLock = $this->getMockBuilder(Lock::class)
+            ->setConstructorArgs([$this->getRandomString()])
+            ->onlyMethods(['isLocked', 'break'])
+            ->getMock();
+        $notBreakingLock->setBreakOnDestruct(false);
+        $notBreakingLock
+            ->expects($this->never())
+            ->method('isLocked')
+            ->willReturn(true);
+        $notBreakingLock
+            ->expects($this->never())
+            ->method('break');
+
+        $notBreakingLock->__destruct();
+    }
+
+    /**
+     * @throws InvalidResponseStatusCodeException
+     * @throws TooManySaveRetriesException
+     */
+    public function testCanLockWithSameKeyTwiceWhenIsNotExclusive(): void
+    {
+        $key = $this->getRandomString();
+        $identifierA = $this->getRandomString();
+        $identifierB = $this->getRandomString();
+
+        $lockA = new PublicLock($key, false, 5, 0, $identifierA);
+        $this->assertFalse($lockA->isLockedByOther());
+
+        $lockB = new PublicLock($key, false, 5, 0, $identifierB);
+        # is not locked by other because it was not updated
+        $this->assertFalse($lockA->isLockedByOther());
+        # is locked by other because it was updated
+        $this->assertTrue($lockB->isLockedByOther());
+
+        $lockA->update();
+        $this->assertTrue($lockA->isLockedByOther());
+        $lockB->update();
+        $this->assertTrue($lockB->isLockedByOther());
+
+        $lockA->break();
+        $lockB->break();
+
+        $lockA->update();
+        $this->assertFalse($lockA->isLockedByOther());
+        $lockB->update();
+        $this->assertFalse($lockB->isLockedByOther());
+    }
+
+    /**
+     * @throws InvalidResponseStatusCodeException
+     * @throws TooManySaveRetriesException
+     */
+    public function testCannotLockWithSameKeyTwiceWhenIsExclusive(): void
+    {
+        $key = $this->getRandomString();
+        $identifierA = $this->getRandomString();
+        $identifierB = $this->getRandomString();
+
+        $lockA = new PublicLock($key, true, 999, 0, $identifierA);
+        $this->assertNotFalse($lockA->isLocked());
+        $this->assertFalse($lockA->isLockedByOtherExclusively());
+
+        $lockB = new PublicLock($key, true, 999, 0, $identifierB);
+        # is not locked because lockA already got the lock
+        $this->assertFalse($lockB->isLocked());
+        # is locked by other because it was updated
+        $this->assertTrue($lockB->isLockedByOtherExclusively());
+
+        $lockA->update();
+        $lockB->update();
+        # is locked by other because the lock on lockA is active
+        $this->assertTrue($lockB->isLockedByOtherExclusively());
+        # is not locked by other because lockA has the only exclusive lock
+        $this->assertFalse($lockA->isLockedByOtherExclusively());
+
+        $lockA->break();
+        $lockB->break();
+
+        $lockA->update();
+        $this->assertFalse($lockA->isLockedByOtherExclusively());
+        $lockB->update();
+        $this->assertFalse($lockB->isLockedByOtherExclusively());
+    }
+
 }
 
 /**
