@@ -18,7 +18,7 @@ interface LockInterface
      * @param int $wait
      * @param string|null $identifier
      */
-    public function __construct(string $key, bool $exclusive = false, int $time = 60, int $wait = 300, string $identifier = null);
+    public function __construct(string $key, bool $exclusive = false, int $time = 60, int $wait = 300, ?string $identifier = null);
 
     /**
      * Check if is locked and returns time until lock runs out or false
