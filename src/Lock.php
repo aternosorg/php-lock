@@ -8,7 +8,6 @@ use Aternos\Etcd\Exception\Status\DeadlineExceededException;
 use Aternos\Etcd\Exception\Status\InvalidResponseStatusCodeException;
 use Aternos\Etcd\Exception\Status\UnavailableException;
 use Aternos\Etcd\Exception\Status\UnknownException;
-use stdClass;
 
 /**
  * Class Lock
