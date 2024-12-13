@@ -262,7 +262,7 @@ class Lock
      * @throws InvalidResponseStatusCodeException
      * @throws TooManySaveRetriesException
      */
-    public function lock(bool $exclusive = false, int $time = 120, int $wait = 300, string $identifier = null): bool
+    public function lock(bool $exclusive = false, int $time = 120, int $wait = 300, ?string $identifier = null): bool
     {
         $this->exclusive = $exclusive;
         $this->time = $time;

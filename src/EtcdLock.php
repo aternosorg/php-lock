@@ -25,7 +25,7 @@ class EtcdLock extends Lock implements LockInterface
      * @throws InvalidResponseStatusCodeException
      * @throws TooManySaveRetriesException
      */
-    public function __construct(string $key, bool $exclusive = false, int $time = 120, int $wait = 300, string $identifier = null)
+    public function __construct(string $key, bool $exclusive = false, int $time = 120, int $wait = 300, ?string $identifier = null)
     {
         parent::__construct($key);
         $this->lock($exclusive, $time, $wait, $identifier);
