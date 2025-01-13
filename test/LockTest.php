@@ -30,6 +30,25 @@ class LockTest extends TestCase
         $lock->break();
     }
 
+    public function testConstructLockWithDefaultIdentifier(): void
+    {
+        $lock = new Lock("key");
+        $this->assertIsString($lock->getIdentifier());
+    }
+
+    public function testConstructLockWithIdentifier(): void
+    {
+        $lock = new Lock("key", "identifier");
+        $this->assertEquals("identifier", $lock->getIdentifier());
+    }
+
+    public function testSetIdentifier(): void
+    {
+        $lock = new Lock("key");
+        $lock->setIdentifier("identifier");
+        $this->assertEquals("identifier", $lock->getIdentifier());
+    }
+
     /**
      * @throws InvalidResponseStatusCodeException
      * @throws TooManySaveRetriesException

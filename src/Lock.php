@@ -245,10 +245,20 @@ class Lock
      *
      * @param string $key Can be anything, should describe the resource in a unique way
      */
-    public function __construct(string $key)
+    public function __construct(string $key, ?string $identifier = null)
     {
         $this->key = $key;
         $this->etcdKey = static::$prefix . $this->key;
+
+        if (static::$defaultIdentifier === null) {
+            static::setDefaultIdentifier();
+        }
+
+        if ($identifier === null) {
+            $this->identifier = static::$defaultIdentifier;
+        } else {
+            $this->identifier = $identifier;
+        }
     }
 
     /**
@@ -267,12 +277,7 @@ class Lock
         $this->exclusive = $exclusive;
         $this->time = $time;
 
-        if (static::$defaultIdentifier === null) {
-            static::setDefaultIdentifier();
-        }
-        if ($identifier === null) {
-            $this->identifier = static::$defaultIdentifier;
-        } else {
+        if ($identifier !== null) {
             $this->identifier = $identifier;
         }
 
@@ -324,6 +329,21 @@ class Lock
         }
 
         return false;
+    }
+
+    /**
+     * Set the identifier for this lock, falls back to the default identifier if null
+     *
+     * @param string|null $identifier
+     * @return void
+     */
+    public function setIdentifier(?string $identifier): void
+    {
+        if ($identifier === null) {
+            $this->identifier = static::$defaultIdentifier;
+        } else {
+            $this->identifier = $identifier;
+        }
     }
 
     /**
