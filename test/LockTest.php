@@ -346,8 +346,6 @@ class LockTest extends TestCase
      */
     public function testLockFunctionUsesUniqueDefaultIdentifierIfNoIdentifierParameterIsProvided(): void
     {
-        $lock = new Lock($this->getRandomString());
-
         # Default identifier is not set explicitly and its default value is null.
         # (We have to set it to null manually because other tests might have set the default identifier before.)
         $reflection = new \ReflectionProperty(Lock::class, 'defaultIdentifier');
@@ -355,7 +353,7 @@ class LockTest extends TestCase
         $reflection->setValue(null);
         $this->assertNull($reflection->getValue());
 
-        # lock() sets the default identifier to an uniqid()
+        $lock = new Lock($this->getRandomString());
         $lock->lock();
         $defaultIdentifier = $reflection->getValue();
         $this->assertIsString($defaultIdentifier);
