@@ -244,6 +244,7 @@ class Lock
      * Create a lock
      *
      * @param string $key Can be anything, should describe the resource in a unique way
+     * @param string|null $identifier An identifier for this lock, falls back to the default identifier if null
      */
     public function __construct(string $key, ?string $identifier = null)
     {
