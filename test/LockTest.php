@@ -30,6 +30,25 @@ class LockTest extends TestCase
         $lock->break();
     }
 
+    public function testConstructLockWithDefaultIdentifier(): void
+    {
+        $lock = new Lock("key");
+        $this->assertIsString($lock->getIdentifier());
+    }
+
+    public function testConstructLockWithIdentifier(): void
+    {
+        $lock = new Lock("key", "identifier");
+        $this->assertEquals("identifier", $lock->getIdentifier());
+    }
+
+    public function testSetIdentifier(): void
+    {
+        $lock = new Lock("key");
+        $lock->setIdentifier("identifier");
+        $this->assertEquals("identifier", $lock->getIdentifier());
+    }
+
     /**
      * @throws InvalidResponseStatusCodeException
      * @throws TooManySaveRetriesException
@@ -327,8 +346,6 @@ class LockTest extends TestCase
      */
     public function testLockFunctionUsesUniqueDefaultIdentifierIfNoIdentifierParameterIsProvided(): void
     {
-        $lock = new Lock($this->getRandomString());
-
         # Default identifier is not set explicitly and its default value is null.
         # (We have to set it to null manually because other tests might have set the default identifier before.)
         $reflection = new \ReflectionProperty(Lock::class, 'defaultIdentifier');
@@ -336,7 +353,7 @@ class LockTest extends TestCase
         $reflection->setValue(null);
         $this->assertNull($reflection->getValue());
 
-        # lock() sets the default identifier to an uniqid()
+        $lock = new Lock($this->getRandomString());
         $lock->lock();
         $defaultIdentifier = $reflection->getValue();
         $this->assertIsString($defaultIdentifier);
