@@ -331,15 +331,16 @@ class Lock implements LockInterface
      * Set the identifier for this lock, falls back to the default identifier if null
      *
      * @param string|null $identifier
-     * @return void
+     * @return $this
      */
-    public function setIdentifier(?string $identifier): void
+    public function setIdentifier(?string $identifier): static
     {
         if ($identifier === null) {
             $this->identifier = static::$defaultIdentifier;
         } else {
             $this->identifier = $identifier;
         }
+        return $this;
     }
 
     /**
@@ -356,10 +357,12 @@ class Lock implements LockInterface
      * Dis/enable automatic lock break on object destruct
      *
      * @param bool $breakOnDestruct
+     * @return $this
      */
-    public function setBreakOnDestruct(bool $breakOnDestruct): void
+    public function setBreakOnDestruct(bool $breakOnDestruct): static
     {
         $this->breakOnDestruct = $breakOnDestruct;
+        return $this;
     }
 
     /**
@@ -586,8 +589,9 @@ class Lock implements LockInterface
      * Update the locks array from etcd
      *
      * @throws InvalidResponseStatusCodeException
+     * @return $this
      */
-    public function update(): void
+    public function update(): static
     {
         $etcdLockString = false;
         for ($i = 1; $i <= static::$maxUnavailableRetries; $i++) {
@@ -604,15 +608,16 @@ class Lock implements LockInterface
             }
         }
 
-        $this->updateFromString($etcdLockString);
+        return $this->updateFromString($etcdLockString);
     }
 
     /**
      * Update the locks array from a JSON string
      *
      * @param string|bool $lockString
+     * @return $this
      */
-    protected function updateFromString(string|bool $lockString): void
+    protected function updateFromString(string|bool $lockString): static
     {
         $this->previousLockString = $lockString;
 
@@ -621,6 +626,8 @@ class Lock implements LockInterface
         } else {
             $this->locks = [];
         }
+
+        return $this;
     }
 
     /**
