@@ -182,9 +182,9 @@ class Lock
     /**
      * Unique key for the resource
      *
-     * @var string|null
+     * @var string
      */
-    protected ?string $key = null;
+    protected string $key;
 
     /**
      * Timeout time of the lock
@@ -412,6 +412,15 @@ class Lock
         $this->removeLock();
 
         return true;
+    }
+
+    /**
+     * Get the unique key for the resource
+     * @return string
+     */
+    public function getKey(): string
+    {
+        return $this->key;
     }
 
     /**
