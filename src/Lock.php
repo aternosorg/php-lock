@@ -268,19 +268,14 @@ class Lock implements LockInterface
      * @param bool $exclusive
      * @param int $time
      * @param int $wait
-     * @param string|null $identifier
      * @return bool
      * @throws InvalidResponseStatusCodeException
      * @throws TooManySaveRetriesException
      */
-    public function lock(bool $exclusive = false, int $time = 120, int $wait = 300, ?string $identifier = null): bool
+    public function lock(bool $exclusive = false, int $time = 120, int $wait = 300): bool
     {
         $this->exclusive = $exclusive;
         $this->time = $time;
-
-        if ($identifier !== null) {
-            $this->identifier = $identifier;
-        }
 
         $this->retries = 0;
 
