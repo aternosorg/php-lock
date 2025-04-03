@@ -20,12 +20,9 @@ interface LockInterface
     /**
      * Try to acquire lock
      *
-     * @param bool $exclusive true for exclusive lock, false for shared lock
-     * @param int $time duration in seconds for which the lock should be held
-     * @param int $wait duration in seconds to wait for existing locks to be released
      * @return bool true if lock was acquired, false otherwise
      */
-    public function lock(bool $exclusive = false, int $time = 120, int $wait = 300): bool;
+    public function lock(): bool;
 
     /**
      * Check if is locked and returns time until lock runs out or false
@@ -37,11 +34,9 @@ interface LockInterface
     /**
      * Refresh the lock
      *
-     * @param int $time
-     * @param int $remainingThreshold
      * @return bool
      */
-    public function refresh(int $time = 60, int $remainingThreshold = 30): bool;
+    public function refresh(): bool;
 
     /**
      * Break the lock
