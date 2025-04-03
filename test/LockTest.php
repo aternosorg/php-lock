@@ -49,6 +49,12 @@ class LockTest extends TestCase
         $this->assertEquals("identifier", $lock->getIdentifier());
     }
 
+    public function testGetkey(): void
+    {
+        $lock = new Lock("key");
+        $this->assertEquals("key", $lock->getKey());
+    }
+
     /**
      * @throws InvalidResponseStatusCodeException
      * @throws TooManySaveRetriesException
