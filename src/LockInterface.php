@@ -13,12 +13,19 @@ interface LockInterface
      * LockInterface constructor.
      *
      * @param string $key
-     * @param bool $exclusive
-     * @param int $time
-     * @param int $wait
      * @param string|null $identifier
      */
-    public function __construct(string $key, bool $exclusive = false, int $time = 60, int $wait = 300, ?string $identifier = null);
+    public function __construct(string $key, ?string $identifier = null);
+
+    /**
+     * Try to acquire lock
+     *
+     * @param bool $exclusive true for exclusive lock, false for shared lock
+     * @param int $time duration in seconds for which the lock should be held
+     * @param int $wait duration in seconds to wait for existing locks to be released
+     * @return bool true if lock was acquired, false otherwise
+     */
+    public function lock(bool $exclusive = false, int $time = 120, int $wait = 300): bool;
 
     /**
      * Check if is locked and returns time until lock runs out or false

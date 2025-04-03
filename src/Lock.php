@@ -14,7 +14,7 @@ use Aternos\Etcd\Exception\Status\UnknownException;
  *
  * @package Aternos\Lock
  */
-class Lock
+class Lock implements LockInterface
 {
     /**
      * see Lock::setClient()

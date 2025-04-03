@@ -3,10 +3,10 @@
 namespace Aternos\Lock\Test;
 
 use Aternos\Etcd\Exception\Status\InvalidResponseStatusCodeException;
-use Aternos\Lock\EtcdLock;
 use Aternos\Lock\Lock;
 use Aternos\Lock\TooManySaveRetriesException;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
 
 class LockTest extends TestCase
 {
@@ -56,21 +56,6 @@ class LockTest extends TestCase
     }
 
     /**
-     * @throws InvalidResponseStatusCodeException
-     * @throws TooManySaveRetriesException
-     */
-    public function testCreateEtcdLock(): void
-    {
-        $key = $this->getRandomString();
-        $identifier = $this->getRandomString();
-
-        $lock = new EtcdLock($key, false, 10, 0, $identifier);
-        $this->assertTrue($lock->isLocked() >= 8);
-
-        $lock->break();
-    }
-
-    /**
      * @throws TooManySaveRetriesException
      * @throws InvalidResponseStatusCodeException
      */
@@ -79,7 +64,8 @@ class LockTest extends TestCase
         $key = $this->getRandomString();
         $identifier = $this->getRandomString();
 
-        $lock = new EtcdLock($key, false, 10, 0, $identifier);
+        $lock = new Lock($key, $identifier);
+        $lock->lock(false, 10, 0);
         $this->assertTrue($lock->isLocked() > 0);
         $lock->break();
         $this->assertFalse($lock->isLocked());
@@ -94,7 +80,8 @@ class LockTest extends TestCase
         $key = $this->getRandomString();
         $identifier = $this->getRandomString();
 
-        $lock = new EtcdLock($key, false, 3, 0, $identifier);
+        $lock = new Lock($key, $identifier);
+        $lock->lock(false, 3, 0);
         $this->assertTrue($lock->isLocked() > 0);
         sleep(3);
         $this->assertFalse($lock->isLocked());
@@ -111,7 +98,8 @@ class LockTest extends TestCase
         $key = $this->getRandomString();
         $identifier = $this->getRandomString();
 
-        $lock = new EtcdLock($key, false, 3, 0, $identifier);
+        $lock = new Lock($key, $identifier);
+        $lock->lock(false, 3, 0);
         $this->assertTrue($lock->isLocked() > 0);
         sleep(1);
         $lock->refresh(5);
@@ -131,7 +119,8 @@ class LockTest extends TestCase
         $key = $this->getRandomString();
         $identifier = $this->getRandomString();
 
-        $lock = new EtcdLock($key, false, 10, 0, $identifier);
+        $lock = new Lock($key, $identifier);
+        $lock->lock(false, 10, 0);
         $this->assertTrue($lock->isLocked() > 0);
         sleep(3);
         $lock->refresh(10, 5);
@@ -155,9 +144,13 @@ class LockTest extends TestCase
         $identifierB = $this->getRandomString();
         $identifierC = $this->getRandomString();
 
-        $lockA = new EtcdLock($key, false, 3, 0, $identifierA);
-        $lockB = new EtcdLock($key, false, 3, 0, $identifierB);
-        $lockC = new EtcdLock($key, false, 3, 0, $identifierC);
+        $lockA = new Lock($key, $identifierA);
+        $lockB = new Lock($key, $identifierB);
+        $lockC = new Lock($key, $identifierC);
+
+        $lockA->lock(false, 3, 0);
+        $lockB->lock(false, 3, 0);
+        $lockC->lock(false, 3, 0);
 
         $this->assertTrue($lockA->isLocked() > 0);
         $this->assertTrue($lockB->isLocked() > 0);
@@ -188,7 +181,8 @@ class LockTest extends TestCase
         $key = $this->getRandomString();
         $identifier = $this->getRandomString();
 
-        $lock = new EtcdLock($key, true, 10, 0, $identifier);
+        $lock = new Lock($key, $identifier);
+        $lock->lock(true, 10, 0);
         $this->assertTrue($lock->isLocked() > 0);
         $lock->break();
         $this->assertFalse($lock->isLocked());
@@ -206,9 +200,12 @@ class LockTest extends TestCase
         $identifierA = $this->getRandomString();
         $identifierB = $this->getRandomString();
 
-        $lockA = new EtcdLock($key, true, 3, 0, $identifierA);
+        $lockA = new Lock($key, $identifierA);
+        $lockA->lock(true, 3, 0);
         $this->assertTrue($lockA->isLocked() > 0);
-        $lockB = new EtcdLock($key, true, 3, 5, $identifierB);
+
+        $lockB = new Lock($key, $identifierB);
+        $lockB->lock(true, 3, 5);
         $this->assertTrue($lockB->isLocked() > 0);
 
         $lockA->break();
@@ -225,9 +222,11 @@ class LockTest extends TestCase
         $identifierA = $this->getRandomString();
         $identifierB = $this->getRandomString();
 
-        $lockA = new EtcdLock($key, true, 3, 0, $identifierA);
+        $lockA = new Lock($key, $identifierA);
+        $lockA->lock(true, 3, 0);
         $this->assertTrue($lockA->isLocked() > 0);
-        $lockB = new EtcdLock($key, false, 3, 0, $identifierB);
+        $lockB = new Lock($key, $identifierB);
+        $lockB->lock(false, 3, 0);
         $this->assertFalse($lockB->isLocked());
 
         $lockA->break();
@@ -244,9 +243,11 @@ class LockTest extends TestCase
         $identifierA = $this->getRandomString();
         $identifierB = $this->getRandomString();
 
-        $lockA = new EtcdLock($key, false, 3, 0, $identifierA);
+        $lockA = new Lock($key, $identifierA);
+        $lockA->lock(false, 3, 0);
         $this->assertTrue($lockA->isLocked() > 0);
-        $lockB = new EtcdLock($key, true, 3, 0, $identifierB);
+        $lockB = new Lock($key, $identifierB);
+        $lockB->lock(true, 3, 0);
         $this->assertFalse($lockB->isLocked());
 
         $lockA->break();
@@ -265,16 +266,21 @@ class LockTest extends TestCase
         $identifierC = $this->getRandomString();
         $identifierD = $this->getRandomString();
 
-        $lockA = new EtcdLock($key, false, 3, 0, $identifierA);
-        $lockB = new EtcdLock($key, false, 5, 0, $identifierB);
-        $lockC = new EtcdLock($key, false, 8, 0, $identifierC);
+        $lockA = new Lock($key, $identifierA);
+        $lockB = new Lock($key, $identifierB);
+        $lockC = new Lock($key, $identifierC);
+
+        $lockA->lock(false, 3, 0);
+        $lockB->lock(false, 5, 0);
+        $lockC->lock(false, 8, 0);
 
         $this->assertTrue($lockA->isLocked() > 0);
         $this->assertTrue($lockB->isLocked() > 0);
         $this->assertTrue($lockC->isLocked() > 0);
 
         $time = time();
-        $lockD = new EtcdLock($key, true, 3, 10, $identifierD);
+        $lockD = new Lock($key, $identifierD);
+        $lockD->lock(true, 3, 10);
         $this->assertTrue(time() - $time >= 7);
 
         $lockA->break();
@@ -293,8 +299,10 @@ class LockTest extends TestCase
         $identifierA = $this->getRandomString();
         $identifierB = $this->getRandomString();
 
-        $lockA = new PublicLock($key, false, 5, 0, $identifierA);
-        $lockB = new PublicLock($key, false, 5, 0, $identifierB);
+        $lockA = new PublicLock($key, $identifierA);
+        $lockA->lock(false, 5, 0);
+        $lockB = new PublicLock($key, $identifierB);
+        $lockB->lock(false, 5, 0);
 
         $this->assertTrue($lockA->isLocked() > 0);
         $this->assertTrue($lockB->isLocked() > 0);
@@ -326,8 +334,10 @@ class LockTest extends TestCase
         $identifierA = $this->getRandomString();
         $identifierB = $this->getRandomString();
 
-        $lockA = new PublicLock($key, false, 5, 0, $identifierA);
-        $lockB = new PublicLock($key, false, 5, 0, $identifierB);
+        $lockA = new PublicLock($key, $identifierA);
+        $lockA->lock(false, 5, 0);
+        $lockB = new PublicLock($key, $identifierB);
+        $lockB->lock(false, 5, 0);
 
         $this->assertTrue($lockA->isLocked() > 0);
         $this->assertTrue($lockB->isLocked() > 0);
@@ -354,9 +364,8 @@ class LockTest extends TestCase
     {
         # Default identifier is not set explicitly and its default value is null.
         # (We have to set it to null manually because other tests might have set the default identifier before.)
-        $reflection = new \ReflectionProperty(Lock::class, 'defaultIdentifier');
-        $reflection->setAccessible(true);
-        $reflection->setValue(null);
+        $reflection = new ReflectionProperty(Lock::class, 'defaultIdentifier');
+        $reflection->setValue(null, null);
         $this->assertNull($reflection->getValue());
 
         $lock = new Lock($this->getRandomString());
@@ -441,10 +450,12 @@ class LockTest extends TestCase
         $identifierA = $this->getRandomString();
         $identifierB = $this->getRandomString();
 
-        $lockA = new PublicLock($key, false, 5, 0, $identifierA);
+        $lockA = new PublicLock($key, $identifierA);
+        $lockA->lock(false, 5, 0);
         $this->assertFalse($lockA->isLockedByOther());
 
-        $lockB = new PublicLock($key, false, 5, 0, $identifierB);
+        $lockB = new PublicLock($key, $identifierB);
+        $lockB->lock(false, 5, 0);
         # is not locked by other because it was not updated
         $this->assertFalse($lockA->isLockedByOther());
         # is locked by other because it was updated
@@ -474,11 +485,13 @@ class LockTest extends TestCase
         $identifierA = $this->getRandomString();
         $identifierB = $this->getRandomString();
 
-        $lockA = new PublicLock($key, true, 999, 0, $identifierA);
+        $lockA = new PublicLock($key, $identifierA);
+        $lockA->lock(true, 999, 0);
         $this->assertNotFalse($lockA->isLocked());
         $this->assertFalse($lockA->isLockedByOtherExclusively());
 
-        $lockB = new PublicLock($key, true, 999, 0, $identifierB);
+        $lockB = new PublicLock($key, $identifierB);
+        $lockB->lock(true, 999, 0);
         # is not locked because lockA already got the lock
         $this->assertFalse($lockB->isLocked());
         # is locked by other because it was updated
@@ -507,7 +520,7 @@ class LockTest extends TestCase
  *
  * Make some functions public for testing purposes
  */
-class PublicLock extends EtcdLock
+class PublicLock extends Lock
 {
     public function addOrUpdateLock(): bool
     {
