@@ -180,46 +180,6 @@ class Lock implements LockInterface
     protected string $identifier;
 
     /**
-     * Unique key for the resource
-     *
-     * @var string
-     */
-    protected string $key;
-
-    /**
-     * Timeout time of the lock in seconds. The lock will be released if this timeout is reached.
-     * @var int
-     */
-    protected int $time = 120;
-
-    /**
-     * Time in seconds to wait for existing locks to be released.
-     * @var int
-     */
-    protected int $waitTime = 300;
-
-    /**
-     * Is this an exclusive lock (true) or shared (false)
-     *
-     * @var bool
-     */
-    protected bool $exclusive = false;
-
-    /**
-     * Duration in seconds the timeout should be set to when refreshing the lock.
-     * If null the initial timeout will be used.
-     * @var int|null
-     */
-    protected ?int $refreshTime = null;
-
-    /**
-     * Maximum duration in seconds the existing lock may be valid for to be refreshed. If the lock is valid for longer
-     * than this time, the lock will not be refreshed.
-     * @var int
-     */
-    protected int $refreshThreshold = 30;
-
-    /**
      * Full name of the key in etcd (prefix + key)
      *
      * @var string|null
@@ -251,32 +211,37 @@ class Lock implements LockInterface
     protected int $retries = 0;
 
     /**
-     * Automatically try to break the lock on destruct if possible
-     *
-     * @var bool
-     */
-    protected bool $breakOnDestruct = true;
-
-    /**
      * Create a lock
      *
      * @param string $key Can be anything, should describe the resource in a unique way
      * @param string|null $identifier An identifier for this lock, falls back to the default identifier if null
+     * @param int $time Timeout time of the lock in seconds. The lock will be released if this timeout is reached.
+     * @param bool $exclusive Is this lock exclusive (true) or shared (false)
+     * @param int $waitTime Time in seconds to wait for existing locks to be released.
+     * @param int|null $refreshTime Duration in seconds the timeout should be set to when refreshing the lock.
+     * If null the initial timeout will be used.
+     * @param int $refreshThreshold Maximum duration in seconds the existing lock may be valid for to be refreshed.
+     * If the lock is valid for longer than this time, the lock will not be refreshed.
+     * @param bool $breakOnDestruct Automatically try to break the lock on destruct if possible
      */
-    public function __construct(string $key, ?string $identifier = null)
+    public function __construct(
+        protected string $key,
+        ?string $identifier = null,
+        protected bool $exclusive = false,
+        protected int $time = 120,
+        protected int $waitTime = 300,
+        protected ?int $refreshTime = null,
+        protected int $refreshThreshold = 30,
+        protected bool $breakOnDestruct = true,
+    )
     {
-        $this->key = $key;
         $this->etcdKey = static::$prefix . $this->key;
 
         if (static::$defaultIdentifier === null) {
             static::setDefaultIdentifier();
         }
 
-        if ($identifier === null) {
-            $this->identifier = static::$defaultIdentifier;
-        } else {
-            $this->identifier = $identifier;
-        }
+        $this->identifier = $identifier ?? static::$defaultIdentifier;
     }
 
     /**
