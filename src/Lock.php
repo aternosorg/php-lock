@@ -277,7 +277,7 @@ class Lock implements LockInterface
             }
         } while ($retry);
 
-        return !!$this->isLocked();
+        return $this->isLocked();
     }
 
     /**
