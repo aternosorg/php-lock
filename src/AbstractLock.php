@@ -2,6 +2,9 @@
 
 namespace Aternos\Lock;
 
+/**
+ * Abstract base class for locks that contains getters and setters for the lock properties.
+ */
 abstract class AbstractLock implements LockInterface
 {
     /**

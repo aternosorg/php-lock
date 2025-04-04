@@ -1,8 +1,8 @@
-<?php
+<?php /** @noinspection PhpUnhandledExceptionInspection */
 
 namespace Aternos\Lock\Test;
 
-use Aternos\Etcd\Exception\Status\InvalidResponseStatusCodeException;
+use Aternos\Lock\Storage\StorageException;
 use Aternos\Lock\Lock;
 use Aternos\Lock\TooManySaveRetriesException;
 use PHPUnit\Framework\TestCase;
@@ -12,12 +12,13 @@ class LockTest extends TestCase
 {
     protected function getRandomString($length = 16): string
     {
+        /** @noinspection SpellCheckingInspection */
         return substr(str_shuffle(str_repeat($x = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', ceil($length / strlen($x)))), 1, $length);
     }
 
     /**
-     * @throws InvalidResponseStatusCodeException
      * @throws TooManySaveRetriesException
+     * @throws StorageException
      */
     public function testCreateLock(): void
     {
@@ -49,16 +50,12 @@ class LockTest extends TestCase
         $this->assertEquals("identifier", $lock->getIdentifier());
     }
 
-    public function testGetkey(): void
+    public function testGetKey(): void
     {
         $lock = new Lock("key");
         $this->assertEquals("key", $lock->getKey());
     }
 
-    /**
-     * @throws TooManySaveRetriesException
-     * @throws InvalidResponseStatusCodeException
-     */
     public function testBreakLock(): void
     {
         $key = $this->getRandomString();
@@ -93,10 +90,6 @@ class LockTest extends TestCase
         $breakingLock->break();
     }
 
-    /**
-     * @throws InvalidResponseStatusCodeException
-     * @throws TooManySaveRetriesException
-     */
     public function testAutoReleaseLock(): void
     {
         $key = $this->getRandomString();
@@ -111,10 +104,7 @@ class LockTest extends TestCase
         $lock->break();
     }
 
-    /**
-     * @throws TooManySaveRetriesException
-     * @throws InvalidResponseStatusCodeException
-     */
+
     public function testRefreshLock(): void
     {
         $key = $this->getRandomString();
@@ -132,10 +122,7 @@ class LockTest extends TestCase
         $this->assertFalse($lock->isLocked());
     }
 
-    /**
-     * @throws TooManySaveRetriesException
-     * @throws InvalidResponseStatusCodeException
-     */
+
     public function testRefreshLockThreshold(): void
     {
         $key = $this->getRandomString();
@@ -155,10 +142,7 @@ class LockTest extends TestCase
         $this->assertFalse($lock->isLocked());
     }
 
-    /**
-     * @throws TooManySaveRetriesException
-     * @throws InvalidResponseStatusCodeException
-     */
+
     public function testMultipleSharedLocks(): void
     {
         $key = $this->getRandomString();
@@ -194,10 +178,7 @@ class LockTest extends TestCase
         $lockC->break();
     }
 
-    /**
-     * @throws TooManySaveRetriesException
-     * @throws InvalidResponseStatusCodeException
-     */
+
     public function testExclusiveLock(): void
     {
         $key = $this->getRandomString();
@@ -212,10 +193,7 @@ class LockTest extends TestCase
         $lock->break();
     }
 
-    /**
-     * @throws TooManySaveRetriesException
-     * @throws InvalidResponseStatusCodeException
-     */
+
     public function testWaitForExclusiveLockAfterExclusiveLock(): void
     {
         $key = $this->getRandomString();
@@ -234,10 +212,7 @@ class LockTest extends TestCase
         $lockB->break();
     }
 
-    /**
-     * @throws TooManySaveRetriesException
-     * @throws InvalidResponseStatusCodeException
-     */
+
     public function testRejectSharedLockWhileExclusiveLock(): void
     {
         $key = $this->getRandomString();
@@ -255,10 +230,7 @@ class LockTest extends TestCase
         $lockB->break();
     }
 
-    /**
-     * @throws TooManySaveRetriesException
-     * @throws InvalidResponseStatusCodeException
-     */
+
     public function testRejectExclusiveLockWhileSharedLock(): void
     {
         $key = $this->getRandomString();
@@ -276,10 +248,7 @@ class LockTest extends TestCase
         $lockB->break();
     }
 
-    /**
-     * @throws TooManySaveRetriesException
-     * @throws InvalidResponseStatusCodeException
-     */
+
     public function testWaitForExclusiveLockAfterMultipleSharedLocks(): void
     {
         $key = $this->getRandomString();
@@ -311,10 +280,7 @@ class LockTest extends TestCase
         $lockD->break();
     }
 
-    /**
-     * @throws TooManySaveRetriesException
-     * @throws InvalidResponseStatusCodeException
-     */
+
     public function testLockWriteConflict(): void
     {
         $key = $this->getRandomString();
@@ -346,10 +312,7 @@ class LockTest extends TestCase
         $lockB->break();
     }
 
-    /**
-     * @throws TooManySaveRetriesException
-     * @throws InvalidResponseStatusCodeException
-     */
+
     public function testLockDeleteConflict(): void
     {
         $key = $this->getRandomString();
@@ -378,10 +341,6 @@ class LockTest extends TestCase
         $lockB->break();
     }
 
-    /**
-     * @throws InvalidResponseStatusCodeException
-     * @throws TooManySaveRetriesException
-     */
     public function testLockFunctionUsesUniqueDefaultIdentifierIfNoIdentifierParameterIsProvided(): void
     {
         # Default identifier is not set explicitly and its default value is null.
@@ -402,10 +361,6 @@ class LockTest extends TestCase
         $lock->break();
     }
 
-    /**
-     * @throws InvalidResponseStatusCodeException
-     * @throws TooManySaveRetriesException
-     */
     public function testLockFunctionUsesThePresetDefaultIdentifierIfNoIdentifierParameterIsProvided(): void
     {
         # Default identifier is set
@@ -416,10 +371,6 @@ class LockTest extends TestCase
         $lock->break();
     }
 
-    /**
-     * @throws InvalidResponseStatusCodeException
-     * @throws TooManySaveRetriesException
-     */
     public function testBreaksOnDestructWhenBreakOnDestructPropertyIsTrue(): void
     {
         # Check that break() and isLocked() are called when breakOnDestruct is set to true
@@ -435,10 +386,6 @@ class LockTest extends TestCase
         $breakingLock->__destruct();
     }
 
-    /**
-     * @throws InvalidResponseStatusCodeException
-     * @throws TooManySaveRetriesException
-     */
     public function testDoesNotBreakOnDestructWhenBreakOnDestructPropertyIsFalse(): void
     {
         # Check that break() and isLocked() are not called when breakOnDestruct is set to false
@@ -458,10 +405,6 @@ class LockTest extends TestCase
         $notBreakingLock->__destruct();
     }
 
-    /**
-     * @throws InvalidResponseStatusCodeException
-     * @throws TooManySaveRetriesException
-     */
     public function testCanLockWithSameKeyTwiceWhenIsNotExclusive(): void
     {
         $key = $this->getRandomString();
@@ -493,10 +436,6 @@ class LockTest extends TestCase
         $this->assertFalse($lockB->isLockedByOther());
     }
 
-    /**
-     * @throws InvalidResponseStatusCodeException
-     * @throws TooManySaveRetriesException
-     */
     public function testCannotLockWithSameKeyTwiceWhenIsExclusive(): void
     {
         $key = $this->getRandomString();
