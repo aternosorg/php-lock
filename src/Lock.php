@@ -14,7 +14,7 @@ use Aternos\Etcd\Exception\Status\UnknownException;
  *
  * @package Aternos\Lock
  */
-class Lock implements LockInterface
+class Lock extends AbstractLock
 {
     /**
      * see Lock::setClient()
@@ -29,13 +29,6 @@ class Lock implements LockInterface
      * @var string
      */
     protected static string $prefix = "lock/";
-
-    /**
-     * see Lock::setDefaultIdentifier()
-     *
-     * @var string|null
-     */
-    protected static ?string $defaultIdentifier = null;
 
     /**
      * see Lock::setWaitRetryInterval()
@@ -92,25 +85,6 @@ class Lock implements LockInterface
     public static function setPrefix(string $prefix): void
     {
         static::$prefix = $prefix;
-    }
-
-    /**
-     * Set the default identifier
-     *
-     * Should be the same for the same synchronous process/request, but should be random
-     * enough to never be the same. Can be created with uniqid(). Will fallback to uniqid().
-     * If there is already a lock with the same identifier, that lock is used for this lock.
-     *
-     * Can be set individually on every lock if necessary (see Lock::__construct).
-     *
-     * @param string|null $defaultIdentifier
-     */
-    public static function setDefaultIdentifier(?string $defaultIdentifier = null): void
-    {
-        if ($defaultIdentifier === null) {
-            $defaultIdentifier = uniqid();
-        }
-        static::$defaultIdentifier = $defaultIdentifier;
     }
 
     /**
@@ -185,15 +159,6 @@ class Lock implements LockInterface
     }
 
     /**
-     * Identifier of the current lock
-     *
-     * Probably the same as Lock::$defaultIdentifier if not overwritten in Lock::__construct()
-     *
-     * @var string
-     */
-    protected string $identifier;
-
-    /**
      * Full name of the key in etcd (prefix + key)
      *
      * @var string|null
@@ -239,23 +204,18 @@ class Lock implements LockInterface
      * @param bool $breakOnDestruct Automatically try to break the lock on destruct if possible
      */
     public function __construct(
-        protected string $key,
+        string $key,
         ?string $identifier = null,
-        protected bool $exclusive = false,
-        protected int $time = 120,
-        protected int $waitTime = 300,
-        protected ?int $refreshTime = null,
-        protected int $refreshThreshold = 30,
-        protected bool $breakOnDestruct = true,
+        bool $exclusive = false,
+        int $time = 120,
+        int $waitTime = 300,
+        ?int $refreshTime = null,
+        int $refreshThreshold = 30,
+        bool $breakOnDestruct = true,
     )
     {
+        parent::__construct($key, $identifier, $exclusive, $time, $waitTime, $refreshTime, $refreshThreshold, $breakOnDestruct);
         $this->etcdKey = static::$prefix . $this->key;
-
-        if (static::$defaultIdentifier === null) {
-            static::setDefaultIdentifier();
-        }
-
-        $this->identifier = $identifier ?? static::$defaultIdentifier;
     }
 
     /**
@@ -304,16 +264,6 @@ class Lock implements LockInterface
     }
 
     /**
-     * Check if is locked and returns time until lock runs out or false
-     *
-     * @return bool
-     */
-    public function isLocked(): bool
-    {
-        return $this->getRemainingLockDuration() > 0;
-    }
-
-    /**
      * Get the time until the lock runs out. This method will return -1 if the lock is not valid or other negative values
      * if the lock has already run out.
      *
@@ -328,157 +278,6 @@ class Lock implements LockInterface
         }
 
         return -1;
-    }
-
-    /**
-     * Get the unique key for the resource
-     * @return string
-     */
-    public function getKey(): string
-    {
-        return $this->key;
-    }
-
-    /**
-     * Set the identifier for this lock, falls back to the default identifier if null
-     *
-     * @param string|null $identifier
-     * @return $this
-     */
-    public function setIdentifier(?string $identifier): static
-    {
-        if ($identifier === null) {
-            $this->identifier = static::$defaultIdentifier;
-        } else {
-            $this->identifier = $identifier;
-        }
-        return $this;
-    }
-
-    /**
-     * Get the used identifier for this lock
-     *
-     * @return string|null
-     */
-    public function getIdentifier(): ?string
-    {
-        return $this->identifier;
-    }
-
-    /**
-     * Dis/enable automatic lock break on object destruct
-     *
-     * @param bool $breakOnDestruct
-     * @return $this
-     */
-    public function setBreakOnDestruct(bool $breakOnDestruct): static
-    {
-        $this->breakOnDestruct = $breakOnDestruct;
-        return $this;
-    }
-
-    /**
-     * Set the timeout time of the lock. The lock will be released if this timeout is reached.
-     * @param int $time time in seconds
-     * @return $this
-     */
-    public function setTime(int $time): static
-    {
-        $this->time = $time;
-        return $this;
-    }
-
-    /**
-     * Get the timeout time of the lock in seconds. The lock will be released if this timeout is reached.
-     * @return int
-     */
-    public function getTime(): int
-    {
-        return $this->time;
-    }
-
-    /**
-     * Is this lock exclusive (true) or shared (false)
-     * @return bool
-     */
-    public function isExclusive(): bool
-    {
-        return $this->exclusive;
-    }
-
-    /**
-     * Make this lock exclusive (true) or shared (false)
-     * @param bool $exclusive
-     * @return $this
-     */
-    public function setExclusive(bool $exclusive): static
-    {
-        $this->exclusive = $exclusive;
-        return $this;
-    }
-
-    /**
-     * Get the wait time in seconds to wait for existing locks to be released.
-     * @return int
-     */
-    public function getWaitTime(): int
-    {
-        return $this->waitTime;
-    }
-
-    /**
-     * Set the wait time in seconds to wait for existing locks to be released.
-     * @param int $waitTime
-     * @return $this
-     */
-    public function setWaitTime(int $waitTime): static
-    {
-        $this->waitTime = $waitTime;
-        return $this;
-    }
-
-    /**
-     * Duration in seconds the timeout should be set to when refreshing the lock.
-     * If null the initial timeout will be used.
-     * @return int|null
-     */
-    public function getRefreshTime(): ?int
-    {
-        return $this->refreshTime;
-    }
-
-    /**
-     * Duration in seconds the timeout should be set to when refreshing the lock.
-     * If null the initial timeout will be used.
-     * @param int|null $refreshTime
-     * @return $this
-     */
-    public function setRefreshTime(?int $refreshTime): static
-    {
-        $this->refreshTime = $refreshTime;
-        return $this;
-    }
-
-    /**
-     * Maximum duration in seconds the existing lock may be valid for to be refreshed. If the lock is valid for longer
-     * than this time, the lock will not be refreshed.
-     * @return int
-     */
-    public function getRefreshThreshold(): int
-    {
-        return $this->refreshThreshold;
-    }
-
-    /**
-     * Maximum duration in seconds the existing lock may be valid for to be refreshed. If the lock is valid for longer
-     * than this time, the lock will not be refreshed.
-     * @param int $refreshThreshold
-     * @return $this
-     */
-    public function setRefreshThreshold(int $refreshThreshold): static
-    {
-        $this->refreshThreshold = $refreshThreshold;
-        return $this;
     }
 
     /**
