@@ -24,7 +24,7 @@ class LockTest extends TestCase
         $key = $this->getRandomString();
         $identifier = $this->getRandomString();
 
-        $this->assertTrue(($lock = new Lock($key))->lock(false, 10, 0, $identifier));
+        $this->assertTrue(($lock = new Lock($key, $identifier, false, 10, 0))->lock());
         $this->assertTrue($lock->isLocked() >= 8);
 
         $lock->break();
@@ -64,8 +64,8 @@ class LockTest extends TestCase
         $key = $this->getRandomString();
         $identifier = $this->getRandomString();
 
-        $lock = new Lock($key, $identifier);
-        $lock->lock(false, 10, 0);
+        $lock = new Lock($key, $identifier, false, 10, 0);
+        $lock->lock();
         $this->assertTrue($lock->isLocked() > 0);
         $lock->break();
         $this->assertFalse($lock->isLocked());
@@ -80,8 +80,8 @@ class LockTest extends TestCase
         $key = $this->getRandomString();
         $identifier = $this->getRandomString();
 
-        $lock = new Lock($key, $identifier);
-        $lock->lock(false, 3, 0);
+        $lock = new Lock($key, $identifier, false, 3, 0);
+        $lock->lock();
         $this->assertTrue($lock->isLocked() > 0);
         sleep(3);
         $this->assertFalse($lock->isLocked());
@@ -98,11 +98,11 @@ class LockTest extends TestCase
         $key = $this->getRandomString();
         $identifier = $this->getRandomString();
 
-        $lock = new Lock($key, $identifier);
-        $lock->lock(false, 3, 0);
+        $lock = new Lock($key, $identifier, false, 3, 0, 5);
+        $lock->lock();
         $this->assertTrue($lock->isLocked() > 0);
         sleep(1);
-        $lock->refresh(5);
+        $lock->refresh();
         $this->assertTrue($lock->isLocked() > 3);
         sleep(2);
         $this->assertTrue($lock->isLocked() > 0);
@@ -119,15 +119,15 @@ class LockTest extends TestCase
         $key = $this->getRandomString();
         $identifier = $this->getRandomString();
 
-        $lock = new Lock($key, $identifier);
-        $lock->lock(false, 10, 0);
+        $lock = new Lock($key, $identifier, false, 10, 0, refreshThreshold: 5);
+        $lock->lock();
         $this->assertTrue($lock->isLocked() > 0);
         sleep(3);
-        $lock->refresh(10, 5);
+        $lock->refresh();
         $this->assertTrue($lock->isLocked() > 3);
         $this->assertTrue($lock->isLocked() < 8);
         sleep(3);
-        $lock->refresh(10, 5);
+        $lock->refresh();
         $this->assertTrue($lock->isLocked() > 8);
         $lock->break();
         $this->assertFalse($lock->isLocked());
@@ -144,20 +144,20 @@ class LockTest extends TestCase
         $identifierB = $this->getRandomString();
         $identifierC = $this->getRandomString();
 
-        $lockA = new Lock($key, $identifierA);
-        $lockB = new Lock($key, $identifierB);
-        $lockC = new Lock($key, $identifierC);
+        $lockA = new Lock($key, $identifierA, false, 3, 0, refreshTime: 5);
+        $lockB = new Lock($key, $identifierB, false, 3, 0);
+        $lockC = new Lock($key, $identifierC, false, 3, 0);
 
-        $lockA->lock(false, 3, 0);
-        $lockB->lock(false, 3, 0);
-        $lockC->lock(false, 3, 0);
+        $lockA->lock();
+        $lockB->lock();
+        $lockC->lock();
 
         $this->assertTrue($lockA->isLocked() > 0);
         $this->assertTrue($lockB->isLocked() > 0);
         $this->assertTrue($lockC->isLocked() > 0);
 
         sleep(1);
-        $lockA->refresh(5);
+        $lockA->refresh();
         $this->assertTrue($lockA->isLocked() > 3);
         sleep(2);
 
@@ -181,8 +181,8 @@ class LockTest extends TestCase
         $key = $this->getRandomString();
         $identifier = $this->getRandomString();
 
-        $lock = new Lock($key, $identifier);
-        $lock->lock(true, 10, 0);
+        $lock = new Lock($key, $identifier, true, 10, 0);
+        $lock->lock();
         $this->assertTrue($lock->isLocked() > 0);
         $lock->break();
         $this->assertFalse($lock->isLocked());
@@ -200,12 +200,12 @@ class LockTest extends TestCase
         $identifierA = $this->getRandomString();
         $identifierB = $this->getRandomString();
 
-        $lockA = new Lock($key, $identifierA);
-        $lockA->lock(true, 3, 0);
+        $lockA = new Lock($key, $identifierA, true, 3, 0);
+        $lockA->lock();
         $this->assertTrue($lockA->isLocked() > 0);
 
-        $lockB = new Lock($key, $identifierB);
-        $lockB->lock(true, 3, 5);
+        $lockB = new Lock($key, $identifierB, true, 3, 5);
+        $lockB->lock();
         $this->assertTrue($lockB->isLocked() > 0);
 
         $lockA->break();
@@ -222,11 +222,11 @@ class LockTest extends TestCase
         $identifierA = $this->getRandomString();
         $identifierB = $this->getRandomString();
 
-        $lockA = new Lock($key, $identifierA);
-        $lockA->lock(true, 3, 0);
+        $lockA = new Lock($key, $identifierA, true, 3, 0);
+        $lockA->lock();
         $this->assertTrue($lockA->isLocked() > 0);
-        $lockB = new Lock($key, $identifierB);
-        $lockB->lock(false, 3, 0);
+        $lockB = new Lock($key, $identifierB, false, 3, 0);
+        $lockB->lock();
         $this->assertFalse($lockB->isLocked());
 
         $lockA->break();
@@ -243,11 +243,11 @@ class LockTest extends TestCase
         $identifierA = $this->getRandomString();
         $identifierB = $this->getRandomString();
 
-        $lockA = new Lock($key, $identifierA);
-        $lockA->lock(false, 3, 0);
+        $lockA = new Lock($key, $identifierA, false, 3, 0);
+        $lockA->lock();
         $this->assertTrue($lockA->isLocked() > 0);
-        $lockB = new Lock($key, $identifierB);
-        $lockB->lock(true, 3, 0);
+        $lockB = new Lock($key, $identifierB, true, 3, 0);
+        $lockB->lock();
         $this->assertFalse($lockB->isLocked());
 
         $lockA->break();
@@ -266,21 +266,21 @@ class LockTest extends TestCase
         $identifierC = $this->getRandomString();
         $identifierD = $this->getRandomString();
 
-        $lockA = new Lock($key, $identifierA);
-        $lockB = new Lock($key, $identifierB);
-        $lockC = new Lock($key, $identifierC);
+        $lockA = new Lock($key, $identifierA, false, 3, 0);
+        $lockB = new Lock($key, $identifierB, false, 5, 0);
+        $lockC = new Lock($key, $identifierC, false, 8, 0);
 
-        $lockA->lock(false, 3, 0);
-        $lockB->lock(false, 5, 0);
-        $lockC->lock(false, 8, 0);
+        $lockA->lock();
+        $lockB->lock();
+        $lockC->lock();
 
         $this->assertTrue($lockA->isLocked() > 0);
         $this->assertTrue($lockB->isLocked() > 0);
         $this->assertTrue($lockC->isLocked() > 0);
 
         $time = time();
-        $lockD = new Lock($key, $identifierD);
-        $lockD->lock(true, 3, 10);
+        $lockD = new Lock($key, $identifierD, true, 3, 10);
+        $lockD->lock();
         $this->assertTrue(time() - $time >= 7);
 
         $lockA->break();
@@ -299,15 +299,15 @@ class LockTest extends TestCase
         $identifierA = $this->getRandomString();
         $identifierB = $this->getRandomString();
 
-        $lockA = new PublicLock($key, $identifierA);
-        $lockA->lock(false, 5, 0);
-        $lockB = new PublicLock($key, $identifierB);
-        $lockB->lock(false, 5, 0);
+        $lockA = new PublicLock($key, $identifierA, false, 5, 0);
+        $lockA->lock();
+        $lockB = new PublicLock($key, $identifierB, false, 5, 0);
+        $lockB->lock();
 
         $this->assertTrue($lockA->isLocked() > 0);
         $this->assertTrue($lockB->isLocked() > 0);
 
-        $lockA->addOrUpdateLock();
+        $lockA->addOrUpdateLock($lockA->getTime());
 
         $this->assertTrue($lockA->isLocked() > 0);
         $this->assertTrue($lockB->isLocked() > 0);
@@ -334,10 +334,10 @@ class LockTest extends TestCase
         $identifierA = $this->getRandomString();
         $identifierB = $this->getRandomString();
 
-        $lockA = new PublicLock($key, $identifierA);
-        $lockA->lock(false, 5, 0);
-        $lockB = new PublicLock($key, $identifierB);
-        $lockB->lock(false, 5, 0);
+        $lockA = new PublicLock($key, $identifierA, false, 5, 0);
+        $lockA->lock();
+        $lockB = new PublicLock($key, $identifierB, false, 5, 0);
+        $lockB->lock();
 
         $this->assertTrue($lockA->isLocked() > 0);
         $this->assertTrue($lockB->isLocked() > 0);
@@ -450,12 +450,12 @@ class LockTest extends TestCase
         $identifierA = $this->getRandomString();
         $identifierB = $this->getRandomString();
 
-        $lockA = new PublicLock($key, $identifierA);
-        $lockA->lock(false, 5, 0);
+        $lockA = new PublicLock($key, $identifierA, false, 5, 0);
+        $lockA->lock();
         $this->assertFalse($lockA->isLockedByOther());
 
-        $lockB = new PublicLock($key, $identifierB);
-        $lockB->lock(false, 5, 0);
+        $lockB = new PublicLock($key, $identifierB, false, 5, 0);
+        $lockB->lock();
         # is not locked by other because it was not updated
         $this->assertFalse($lockA->isLockedByOther());
         # is locked by other because it was updated
@@ -485,13 +485,13 @@ class LockTest extends TestCase
         $identifierA = $this->getRandomString();
         $identifierB = $this->getRandomString();
 
-        $lockA = new PublicLock($key, $identifierA);
-        $lockA->lock(true, 999, 0);
+        $lockA = new PublicLock($key, $identifierA, true, 999, 0);
+        $lockA->lock();
         $this->assertNotFalse($lockA->isLocked());
         $this->assertFalse($lockA->isLockedByOtherExclusively());
 
-        $lockB = new PublicLock($key, $identifierB);
-        $lockB->lock(true, 999, 0);
+        $lockB = new PublicLock($key, $identifierB, true, 999, 0);
+        $lockB->lock();
         # is not locked because lockA already got the lock
         $this->assertFalse($lockB->isLocked());
         # is locked by other because it was updated
@@ -522,9 +522,9 @@ class LockTest extends TestCase
  */
 class PublicLock extends Lock
 {
-    public function addOrUpdateLock(): bool
+    public function addOrUpdateLock(int $time): bool
     {
-        return parent::addOrUpdateLock();
+        return parent::addOrUpdateLock($time);
     }
 
     public function removeLock(): bool
