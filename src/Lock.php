@@ -306,18 +306,28 @@ class Lock implements LockInterface
     /**
      * Check if is locked and returns time until lock runs out or false
      *
-     * @return bool|int
+     * @return bool
      */
-    public function isLocked(): bool|int
+    public function isLocked(): bool
+    {
+        return $this->getRemainingLockDuration() > 0;
+    }
+
+    /**
+     * Get the time until the lock runs out. This method will return -1 if the lock is not valid or other negative values
+     * if the lock has already run out.
+     *
+     * @return int
+     */
+    public function getRemainingLockDuration(): int
     {
         foreach ($this->locks as $lock) {
             if ($lock->isBy($this->identifier)) {
-                $remaining = $lock->getRemainingTime();
-                return ($remaining > 0) ? $remaining : false;
+                return $lock->getRemainingTime();
             }
         }
 
-        return false;
+        return -1;
     }
 
     /**
@@ -480,7 +490,7 @@ class Lock implements LockInterface
      */
     public function refresh(): bool
     {
-        if ($this->refreshThreshold > 0 && $this->isLocked() > $this->refreshThreshold) {
+        if ($this->refreshThreshold > 0 && $this->getRemainingLockDuration() > $this->refreshThreshold) {
             return true;
         }
 

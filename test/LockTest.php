@@ -25,7 +25,7 @@ class LockTest extends TestCase
         $identifier = $this->getRandomString();
 
         $this->assertTrue(($lock = new Lock($key, $identifier, false, 10, 0))->lock());
-        $this->assertTrue($lock->isLocked() >= 8);
+        $this->assertGreaterThanOrEqual(8, $lock->getRemainingLockDuration());
 
         $lock->break();
     }
@@ -66,7 +66,7 @@ class LockTest extends TestCase
 
         $lock = new Lock($key, $identifier, false, 10, 0);
         $lock->lock();
-        $this->assertTrue($lock->isLocked() > 0);
+        $this->assertTrue($lock->isLocked());
         $lock->break();
         $this->assertFalse($lock->isLocked());
     }
@@ -104,7 +104,7 @@ class LockTest extends TestCase
 
         $lock = new Lock($key, $identifier, false, 3, 0);
         $lock->lock();
-        $this->assertTrue($lock->isLocked() > 0);
+        $this->assertTrue($lock->isLocked());
         sleep(3);
         $this->assertFalse($lock->isLocked());
 
@@ -122,12 +122,12 @@ class LockTest extends TestCase
 
         $lock = new Lock($key, $identifier, false, 3, 0, 5);
         $lock->lock();
-        $this->assertTrue($lock->isLocked() > 0);
+        $this->assertTrue($lock->isLocked());
         sleep(1);
         $lock->refresh();
-        $this->assertTrue($lock->isLocked() > 3);
+        $this->assertGreaterThan(3, $lock->getRemainingLockDuration());
         sleep(2);
-        $this->assertTrue($lock->isLocked() > 0);
+        $this->assertTrue($lock->isLocked());
         $lock->break();
         $this->assertFalse($lock->isLocked());
     }
@@ -143,14 +143,14 @@ class LockTest extends TestCase
 
         $lock = new Lock($key, $identifier, false, 10, 0, refreshThreshold: 5);
         $lock->lock();
-        $this->assertTrue($lock->isLocked() > 0);
+        $this->assertTrue($lock->isLocked());
         sleep(3);
         $lock->refresh();
-        $this->assertTrue($lock->isLocked() > 3);
-        $this->assertTrue($lock->isLocked() < 8);
+        $this->assertGreaterThan(3, $lock->getRemainingLockDuration());
+        $this->assertLessThan(8, $lock->getRemainingLockDuration());
         sleep(3);
         $lock->refresh();
-        $this->assertTrue($lock->isLocked() > 8);
+        $this->assertGreaterThan(8, $lock->getRemainingLockDuration());
         $lock->break();
         $this->assertFalse($lock->isLocked());
     }
@@ -174,16 +174,16 @@ class LockTest extends TestCase
         $lockB->lock();
         $lockC->lock();
 
-        $this->assertTrue($lockA->isLocked() > 0);
-        $this->assertTrue($lockB->isLocked() > 0);
-        $this->assertTrue($lockC->isLocked() > 0);
+        $this->assertTrue($lockA->isLocked());
+        $this->assertTrue($lockB->isLocked());
+        $this->assertTrue($lockC->isLocked());
 
         sleep(1);
         $lockA->refresh();
-        $this->assertTrue($lockA->isLocked() > 3);
+        $this->assertGreaterThan(3, $lockA->getRemainingLockDuration());
         sleep(2);
 
-        $this->assertTrue($lockA->isLocked() > 0);
+        $this->assertTrue($lockA->isLocked());
         $this->assertFalse($lockB->isLocked());
         $this->assertFalse($lockC->isLocked());
 
@@ -205,7 +205,7 @@ class LockTest extends TestCase
 
         $lock = new Lock($key, $identifier, true, 10, 0);
         $lock->lock();
-        $this->assertTrue($lock->isLocked() > 0);
+        $this->assertTrue($lock->isLocked());
         $lock->break();
         $this->assertFalse($lock->isLocked());
 
@@ -224,11 +224,11 @@ class LockTest extends TestCase
 
         $lockA = new Lock($key, $identifierA, true, 3, 0);
         $lockA->lock();
-        $this->assertTrue($lockA->isLocked() > 0);
+        $this->assertTrue($lockA->isLocked());
 
         $lockB = new Lock($key, $identifierB, true, 3, 5);
         $lockB->lock();
-        $this->assertTrue($lockB->isLocked() > 0);
+        $this->assertTrue($lockB->isLocked());
 
         $lockA->break();
         $lockB->break();
@@ -246,7 +246,7 @@ class LockTest extends TestCase
 
         $lockA = new Lock($key, $identifierA, true, 3, 0);
         $lockA->lock();
-        $this->assertTrue($lockA->isLocked() > 0);
+        $this->assertTrue($lockA->isLocked());
         $lockB = new Lock($key, $identifierB, false, 3, 0);
         $lockB->lock();
         $this->assertFalse($lockB->isLocked());
@@ -267,7 +267,7 @@ class LockTest extends TestCase
 
         $lockA = new Lock($key, $identifierA, false, 3, 0);
         $lockA->lock();
-        $this->assertTrue($lockA->isLocked() > 0);
+        $this->assertTrue($lockA->isLocked());
         $lockB = new Lock($key, $identifierB, true, 3, 0);
         $lockB->lock();
         $this->assertFalse($lockB->isLocked());
@@ -296,14 +296,14 @@ class LockTest extends TestCase
         $lockB->lock();
         $lockC->lock();
 
-        $this->assertTrue($lockA->isLocked() > 0);
-        $this->assertTrue($lockB->isLocked() > 0);
-        $this->assertTrue($lockC->isLocked() > 0);
+        $this->assertTrue($lockA->isLocked());
+        $this->assertTrue($lockB->isLocked());
+        $this->assertTrue($lockC->isLocked());
 
         $time = time();
         $lockD = new Lock($key, $identifierD, true, 3, 10);
         $lockD->lock();
-        $this->assertTrue(time() - $time >= 7);
+        $this->assertGreaterThan(7, time() - $time);
 
         $lockA->break();
         $lockB->break();
@@ -326,21 +326,21 @@ class LockTest extends TestCase
         $lockB = new PublicLock($key, $identifierB, false, 5, 0);
         $lockB->lock();
 
-        $this->assertTrue($lockA->isLocked() > 0);
-        $this->assertTrue($lockB->isLocked() > 0);
+        $this->assertTrue($lockA->isLocked());
+        $this->assertTrue($lockB->isLocked());
 
         $lockA->addOrUpdateLock($lockA->getTime());
 
-        $this->assertTrue($lockA->isLocked() > 0);
-        $this->assertTrue($lockB->isLocked() > 0);
+        $this->assertTrue($lockA->isLocked());
+        $this->assertTrue($lockB->isLocked());
 
         $lockB->update();
 
-        $this->assertTrue($lockB->isLocked() > 0);
+        $this->assertTrue($lockB->isLocked());
 
         $lockA->update();
 
-        $this->assertTrue($lockA->isLocked() > 0);
+        $this->assertTrue($lockA->isLocked());
 
         $lockA->break();
         $lockB->break();
@@ -361,18 +361,18 @@ class LockTest extends TestCase
         $lockB = new PublicLock($key, $identifierB, false, 5, 0);
         $lockB->lock();
 
-        $this->assertTrue($lockA->isLocked() > 0);
-        $this->assertTrue($lockB->isLocked() > 0);
+        $this->assertTrue($lockA->isLocked());
+        $this->assertTrue($lockB->isLocked());
 
         $lockA->removeLock();
         $this->assertFalse($lockA->isLocked());
 
         $lockA->update();
         $this->assertFalse($lockA->isLocked());
-        $this->assertTrue($lockB->isLocked() > 0);
+        $this->assertTrue($lockB->isLocked());
 
         $lockB->update();
-        $this->assertTrue($lockB->isLocked() > 0);
+        $this->assertTrue($lockB->isLocked());
 
         $lockA->break();
         $lockB->break();

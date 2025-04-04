@@ -25,11 +25,19 @@ interface LockInterface
     public function lock(): bool;
 
     /**
-     * Check if is locked and returns time until lock runs out or false
+     * Check if is locked
      *
-     * @return bool|int
+     * @return bool
      */
-    public function isLocked(): bool|int;
+    public function isLocked(): bool;
+
+    /**
+     * * Get the time until the lock runs out. This method will return -1 if the lock is not valid or other negative values
+     * * if the lock has already run out.
+     *
+     * @return int
+     */
+    public function getRemainingLockDuration(): int;
 
     /**
      * Refresh the lock
