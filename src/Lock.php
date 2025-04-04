@@ -171,6 +171,20 @@ class Lock implements LockInterface
     }
 
     /**
+     * Get an Aternos\Etcd\Client instance
+     *
+     * @return ClientInterface
+     */
+    protected static function getClient(): ClientInterface
+    {
+        if (static::$client === null) {
+            static::$client = new Client();
+        }
+
+        return static::$client;
+    }
+
+    /**
      * Identifier of the current lock
      *
      * Probably the same as Lock::$defaultIdentifier if not overwritten in Lock::__construct()
@@ -631,20 +645,6 @@ class Lock implements LockInterface
         } else {
             return true;
         }
-    }
-
-    /**
-     * Get an Aternos\Etcd\Client instance
-     *
-     * @return ClientInterface
-     */
-    protected function getClient(): ClientInterface
-    {
-        if (static::$client === null) {
-            static::$client = new Client();
-        }
-
-        return static::$client;
     }
 
     /**
