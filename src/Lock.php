@@ -175,9 +175,9 @@ class Lock implements LockInterface
      *
      * Probably the same as Lock::$defaultIdentifier if not overwritten in Lock::__construct()
      *
-     * @var string|null
+     * @var string
      */
-    protected ?string $identifier = null;
+    protected string $identifier;
 
     /**
      * Unique key for the resource
