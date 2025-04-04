@@ -32,8 +32,8 @@ interface LockInterface
     public function isLocked(): bool;
 
     /**
-     * * Get the time until the lock runs out. This method will return -1 if the lock is not valid or other negative values
-     * * if the lock has already run out.
+     * Get the time until the lock runs out. This method will return -1 if the lock is not valid or other negative values
+     * if the lock has already run out.
      *
      * @return int
      */
