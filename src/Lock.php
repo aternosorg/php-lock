@@ -162,9 +162,9 @@ class Lock extends AbstractLock
      * Will be used in deleteIf and putIf requests to check
      * if there was no change in etcd while processing the lock
      *
-     * @var string|bool
+     * @var string
      */
-    protected string|bool $previousLockString = false;
+    protected ?string $previousLockString = null;
 
     /**
      * Current parsed locks
@@ -498,10 +498,10 @@ class Lock extends AbstractLock
     /**
      * Update the locks array from a JSON string
      *
-     * @param string|bool $lockString
+     * @param ?string $lockString
      * @return $this
      */
-    protected function updateFromString(string|bool $lockString): static
+    protected function updateFromString(?string $lockString): static
     {
         $this->previousLockString = $lockString;
 
