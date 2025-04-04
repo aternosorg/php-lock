@@ -2,26 +2,23 @@
 
 namespace Aternos\Lock;
 
-use Aternos\Etcd\Client;
-use Aternos\Etcd\ClientInterface;
-use Aternos\Etcd\Exception\Status\DeadlineExceededException;
-use Aternos\Etcd\Exception\Status\InvalidResponseStatusCodeException;
-use Aternos\Etcd\Exception\Status\UnavailableException;
-use Aternos\Etcd\Exception\Status\UnknownException;
+use Aternos\Lock\Storage\EtcdStorage;
+use Aternos\Lock\Storage\StorageException;
+use Aternos\Lock\Storage\StorageInterface;
+use Exception;
 
 /**
- * Class Lock
+ * LockInterface implementation using etcd-like storage
  *
  * @package Aternos\Lock
  */
 class Lock extends AbstractLock
 {
     /**
-     * see Lock::setClient()
-     *
-     * @var ClientInterface|null
+     * @see static::setStorage()
+     * @var StorageInterface|null
      */
-    protected static ?ClientInterface $client = null;
+    protected static ?StorageInterface $storage = null;
 
     /**
      * see Lock::setPrefix()
@@ -66,15 +63,22 @@ class Lock extends AbstractLock
     protected static int $delayPerUnavailableRetry = 1;
 
     /**
-     * Set the etcd client (Aternos\Etcd\Client)
-     *
-     * Uses a localhost client if not set
-     *
-     * @param ClientInterface $client
+     * Set the storage interface used to store locks. If not set, {@link EtcdStorage} is used.
+     * @param StorageInterface $storage
+     * @return void
      */
-    public static function setClient(ClientInterface $client): void
+    public static function setStorage(StorageInterface $storage): void
     {
-        static::$client = $client;
+        static::$storage = $storage;
+    }
+
+    /**
+     * Get the storage interface used to store locks. If not set, {@link EtcdStorage} is used.
+     * @return StorageInterface
+     */
+    protected static function getStorage(): StorageInterface
+    {
+        return static::$storage ??= new EtcdStorage();
     }
 
     /**
@@ -110,12 +114,13 @@ class Lock extends AbstractLock
     }
 
     /**
-     * Set the maximum delay in microseconds (1,000,000 microseconds = 1 second) that should used for the random delay between retries
+     * Set the maximum delay in microseconds (1,000,000 microseconds = 1 second) that should be used for the random
+     * delay between retries.
      *
      * The delay is random and calculated like this: rand(0, $retries * $delayPerRetry)
      *
      * Lower value = faster retries (probably more retries necessary)
-     * Higher value = slower retries (probably less retries necessary)
+     * Higher value = slower retries (probably fewer retries necessary)
      *
      * @param int $delayPerRetry
      */
@@ -142,20 +147,6 @@ class Lock extends AbstractLock
     public static function setDelayPerUnavailableRetry(int $delayPerRetry): void
     {
         static::$delayPerUnavailableRetry = $delayPerRetry;
-    }
-
-    /**
-     * Get an Aternos\Etcd\Client instance
-     *
-     * @return ClientInterface
-     */
-    protected static function getClient(): ClientInterface
-    {
-        if (static::$client === null) {
-            static::$client = new Client();
-        }
-
-        return static::$client;
     }
 
     /**
@@ -222,7 +213,7 @@ class Lock extends AbstractLock
      * Try to acquire lock
      *
      * @return bool true if the lock was acquired, false if it was not
-     * @throws InvalidResponseStatusCodeException
+     * @throws StorageException
      * @throws TooManySaveRetriesException
      */
     public function lock(): bool
@@ -247,7 +238,7 @@ class Lock extends AbstractLock
      *
      * @param int|null $waitTime maximum time in seconds to wait for other locks
      * @return bool
-     * @throws InvalidResponseStatusCodeException
+     * @throws StorageException
      */
     public function waitForOtherLocks(?int $waitTime = null): bool
     {
@@ -284,7 +275,7 @@ class Lock extends AbstractLock
      * Refresh the lock
      *
      * @return boolean
-     * @throws InvalidResponseStatusCodeException
+     * @throws StorageException
      * @throws TooManySaveRetriesException
      */
     public function refresh(): bool
@@ -312,7 +303,7 @@ class Lock extends AbstractLock
      * Should be only used if you have the lock
      *
      * @return void
-     * @throws InvalidResponseStatusCodeException
+     * @throws StorageException
      * @throws TooManySaveRetriesException
      */
     public function break(): void
@@ -340,7 +331,7 @@ class Lock extends AbstractLock
      * Remove a lock from the locking array and save the locks
      *
      * @return void
-     * @throws InvalidResponseStatusCodeException
+     * @throws StorageException
      * @throws TooManySaveRetriesException
      */
     protected function removeLock(): void
@@ -362,7 +353,7 @@ class Lock extends AbstractLock
      *
      * @param int $time
      * @return bool
-     * @throws InvalidResponseStatusCodeException
+     * @throws StorageException
      * @throws TooManySaveRetriesException
      */
     protected function addOrUpdateLock(int $time): bool
@@ -389,8 +380,9 @@ class Lock extends AbstractLock
      * changed since the last update, they will be updated by this function again.
      *
      * @return bool
-     * @throws InvalidResponseStatusCodeException
+     * @throws StorageException
      * @throws TooManySaveRetriesException
+     * @throws Exception
      */
     protected function saveLocks(): bool
     {
@@ -408,9 +400,9 @@ class Lock extends AbstractLock
         if (count($this->locks) === 0) {
             for ($i = 1; $i <= static::$maxUnavailableRetries; $i++) {
                 try {
-                    $result = static::getClient()->deleteIf($this->etcdKey, $previousLocks, !$delayRetry);
+                    $result = static::getStorage()->deleteIf($this->etcdKey, $previousLocks, !$delayRetry);
                     break;
-                } catch (UnavailableException | DeadlineExceededException | UnknownException $e) {
+                } catch (StorageException $e) {
                     if ($i === static::$maxUnavailableRetries) {
                         throw $e;
                     } else {
@@ -424,9 +416,9 @@ class Lock extends AbstractLock
 
             for ($i = 1; $i <= static::$maxUnavailableRetries; $i++) {
                 try {
-                    $result = static::getClient()->putIf($this->etcdKey, $lockString, $previousLocks, !$delayRetry);
+                    $result = static::getStorage()->putIf($this->etcdKey, $lockString, $previousLocks, !$delayRetry);
                     break;
-                } catch (UnavailableException | DeadlineExceededException | UnknownException $e) {
+                } catch (StorageException $e) {
                     if ($i === static::$maxUnavailableRetries) {
                         throw $e;
                     } else {
@@ -479,17 +471,18 @@ class Lock extends AbstractLock
     /**
      * Update the locks array from etcd
      *
-     * @throws InvalidResponseStatusCodeException
      * @return $this
+     * @throws StorageException
+     * @throws Exception
      */
     public function update(): static
     {
         $etcdLockString = false;
         for ($i = 1; $i <= static::$maxUnavailableRetries; $i++) {
             try {
-                $etcdLockString = static::getClient()->get($this->etcdKey);
+                $etcdLockString = static::getStorage()->get($this->etcdKey);
                 break;
-            } catch (UnavailableException | DeadlineExceededException | UnknownException $e) {
+            } catch (StorageException $e) {
                 if ($i === static::$maxUnavailableRetries) {
                     throw $e;
                 } else {
@@ -524,7 +517,7 @@ class Lock extends AbstractLock
     /**
      * Break the lock on destruction of this object
      *
-     * @throws InvalidResponseStatusCodeException
+     * @throws StorageException
      * @throws TooManySaveRetriesException
      */
     public function __destruct()
