@@ -488,17 +488,15 @@ class Lock implements LockInterface
      *
      * Should be only used if you have the lock
      *
-     * @return boolean
+     * @return void
      * @throws InvalidResponseStatusCodeException
      * @throws TooManySaveRetriesException
      */
-    public function break(): bool
+    public function break(): void
     {
         $this->update();
         $this->retries = 0;
         $this->removeLock();
-
-        return true;
     }
 
     /**

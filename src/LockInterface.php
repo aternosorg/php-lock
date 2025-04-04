@@ -43,7 +43,7 @@ interface LockInterface
      *
      * Should be only used if you have the lock
      *
-     * @return bool
+     * @return void
      */
-    public function break(): bool;
+    public function break(): void;
 }
