@@ -31,10 +31,21 @@ class LockTest extends TestCase
         $lock->break();
     }
 
+    public function testGetKey(): void
+    {
+        $lock = new Lock("key");
+        $this->assertEquals("key", $lock->getKey());
+    }
+
     public function testConstructLockWithDefaultIdentifier(): void
     {
         $lock = new Lock("key");
         $this->assertIsString($lock->getIdentifier());
+
+
+        $otherLock = new Lock("key");
+        $this->assertIsString($otherLock->getIdentifier());
+        $this->assertEquals($lock->getIdentifier(), $otherLock->getIdentifier());
     }
 
     public function testConstructLockWithIdentifier(): void
@@ -48,12 +59,121 @@ class LockTest extends TestCase
         $lock = new Lock("key");
         $lock->setIdentifier("identifier");
         $this->assertEquals("identifier", $lock->getIdentifier());
+
+        $lock->setIdentifier(null);
+        $this->assertIsString($lock->getIdentifier());
+
+        $otherLock = new Lock("key");
+        $this->assertIsString($otherLock->getIdentifier());
+        $this->assertEquals($lock->getIdentifier(), $otherLock->getIdentifier());
     }
 
-    public function testGetKey(): void
+    public function testIsExclusive(): void
     {
         $lock = new Lock("key");
-        $this->assertEquals("key", $lock->getKey());
+        $this->assertFalse($lock->isExclusive());
+
+        $lock = new Lock("key", "identifier", true);
+        $this->assertTrue($lock->isExclusive());
+    }
+
+    public function testSetExclusive(): void
+    {
+        $lock = new Lock("key");
+        $this->assertFalse($lock->isExclusive());
+        $lock->setExclusive(true);
+        $this->assertTrue($lock->isExclusive());
+
+        $lock->setExclusive(false);
+        $this->assertFalse($lock->isExclusive());
+    }
+
+    public function testGetWaitTime(): void
+    {
+        $lock = new Lock("key");
+        $this->assertEquals(300, $lock->getWaitTime());
+        $lock = new Lock("key", "identifier", false, 10, 5);
+        $this->assertEquals(5, $lock->getWaitTime());
+    }
+
+    public function testSetWaitTime(): void
+    {
+        $lock = new Lock("key");
+        $this->assertEquals(300, $lock->getWaitTime());
+        $lock->setWaitTime(5);
+        $this->assertEquals(5, $lock->getWaitTime());
+    }
+
+    public function testGetRefreshTime(): void
+    {
+        $lock = new Lock("key");
+        $this->assertEquals(null, $lock->getRefreshTime());
+
+        $lock = new Lock("key", "identifier", false, 10, 0, 5);
+        $this->assertEquals(5, $lock->getRefreshTime());
+    }
+
+    public function testSetRefreshTime(): void
+    {
+        $lock = new Lock("key");
+        $this->assertEquals(null, $lock->getRefreshTime());
+        $lock->setRefreshTime(5);
+        $this->assertEquals(5, $lock->getRefreshTime());
+        $lock->setRefreshTime(null);
+        $this->assertEquals(null, $lock->getRefreshTime());
+    }
+
+    public function testGetRefreshThreshold(): void
+    {
+        $lock = new Lock("key");
+        $this->assertEquals(30, $lock->getRefreshThreshold());
+        $lock = new Lock("key", "identifier", false, 10, 0, 5, 2);
+        $this->assertEquals(2, $lock->getRefreshThreshold());
+    }
+
+    public function testSetRefreshThreshold(): void
+    {
+        $lock = new Lock("key");
+        $this->assertEquals(30, $lock->getRefreshThreshold());
+        $lock->setRefreshThreshold(5);
+        $this->assertEquals(5, $lock->getRefreshThreshold());
+    }
+
+    public function testShouldBreakOnDestruct(): void
+    {
+        $lock = new Lock("key");
+        $this->assertTrue($lock->shouldBreakOnDestruct());
+
+        $lock = new Lock("key", "identifier", breakOnDestruct: false);
+        $this->assertFalse($lock->shouldBreakOnDestruct());
+    }
+
+    public function testSetBreakOnDestruct(): void
+    {
+        $lock = new Lock("key");
+        $this->assertTrue($lock->shouldBreakOnDestruct());
+        $lock->setBreakOnDestruct(false);
+        $this->assertFalse($lock->shouldBreakOnDestruct());
+
+        $lock->setBreakOnDestruct(true);
+        $this->assertTrue($lock->shouldBreakOnDestruct());
+    }
+
+    public function testGetTime(): void
+    {
+        $lock = new Lock("key");
+        $this->assertEquals(120, $lock->getTime());
+
+        $lock = new Lock("key", "identifier", false, 5);
+        $this->assertEquals(5, $lock->getTime());
+    }
+
+    public function testSetTime(): void
+    {
+        $lock = new Lock("key");
+        $this->assertEquals(120, $lock->getTime());
+        $lock->setTime(5);
+        $this->assertEquals(5, $lock->getTime());
     }
 
     public function testBreakLock(): void
