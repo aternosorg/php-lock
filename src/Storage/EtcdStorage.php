@@ -17,31 +17,37 @@ class EtcdStorage implements StorageInterface
         $this->client = $client ?? new Client();
     }
 
-    public function putIf(string $key, string $value, bool|string $previousValue, bool $returnNewValueOnFail): bool|string
+    public function putIf(string $key, string $value, ?string $previousValue, bool $returnNewValueOnFail): bool|string
     {
         try {
-            return $this->client->putIf($key, $value, $previousValue, $returnNewValueOnFail);
+            return $this->client->putIf($key, $value, $previousValue ?? false, $returnNewValueOnFail);
         } catch (UnavailableException | DeadlineExceededException | UnknownException $e) {
             throw new StorageException($e->getMessage(), $e->getCode(), $e);
         }
     }
 
-    public function deleteIf(string $key, $previousValue, bool $returnNewValueOnFail = false): bool|string
+    public function deleteIf(string $key, ?string $previousValue, bool $returnNewValueOnFail = false): bool|string
     {
         try {
-            return $this->client->deleteIf($key, $previousValue, $returnNewValueOnFail);
+            return $this->client->deleteIf($key, $previousValue ?? false, $returnNewValueOnFail);
         } catch (UnavailableException | DeadlineExceededException | UnknownException $e) {
             throw new StorageException($e->getMessage(), $e->getCode(), $e);
         }
     }
 
 
-    public function get(string $key): bool|string
+    public function get(string $key): ?string
     {
         try {
-            return $this->client->get($key);
+            $value = $this->client->get($key);
         } catch (UnavailableException | DeadlineExceededException | UnknownException $e) {
             throw new StorageException($e->getMessage(), $e->getCode(), $e);
         }
+
+        if ($value === false) {
+            return null;
+        }
+
+        return $value;
     }
 }
