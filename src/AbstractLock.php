@@ -17,8 +17,6 @@ abstract class AbstractLock implements LockInterface
      * It should be random enough to never be the same in two different processes. If the default identifier has not
      * been accessed yet, one will be generated using {@link uniqid()}.
      *
-     * If there is already a lock with the same identifier, that lock is used for this lock.
-     *
      * @return string $defaultIdentifier
      */
     public static function getDefaultIdentifier(): string
@@ -27,13 +25,11 @@ abstract class AbstractLock implements LockInterface
     }
 
     /**
-     * Get the default identifier
+     * Set the default identifier
      *
      * This is the default identifier for all new locks and therefore the same within a synchronous process/request.
      * It should be random enough to never be the same in two different processes. Can be created with {@link uniqid()}.
      * Will fall back to {@link uniqid()}.
-     *
-     * If there is already a lock with the same identifier, that lock is used for this lock.
      *
      * Can be set individually on every lock if necessary (see {@link AbstractLock::__construct}).
      *
@@ -47,7 +43,7 @@ abstract class AbstractLock implements LockInterface
     /**
      * Identifier of the current lock
      *
-     * Probably the same as Lock::$defaultIdentifier if not overwritten in Lock::__construct()
+     * Probably the same as {@link static::$defaultIdentifier} if not overwritten in {@link static::__construct()}
      *
      * @var string
      */
