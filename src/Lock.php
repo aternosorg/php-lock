@@ -14,7 +14,7 @@ use Aternos\Etcd\Exception\Status\UnknownException;
  *
  * @package Aternos\Lock
  */
-class Lock
+class Lock implements LockInterface
 {
     /**
      * see Lock::setClient()
@@ -171,36 +171,27 @@ class Lock
     }
 
     /**
+     * Get an Aternos\Etcd\Client instance
+     *
+     * @return ClientInterface
+     */
+    protected static function getClient(): ClientInterface
+    {
+        if (static::$client === null) {
+            static::$client = new Client();
+        }
+
+        return static::$client;
+    }
+
+    /**
      * Identifier of the current lock
      *
      * Probably the same as Lock::$defaultIdentifier if not overwritten in Lock::__construct()
      *
-     * @var string|null
-     */
-    protected ?string $identifier = null;
-
-    /**
-     * Unique key for the resource
-     *
      * @var string
      */
-    protected string $key;
-
-    /**
-     * Timeout time of the lock
-     *
-     * The lock will be released if this timeout is reached
-     *
-     * @var int|null
-     */
-    protected ?int $time = null;
-
-    /**
-     * Is this an exclusive lock (true) or shared (false)
-     *
-     * @var bool
-     */
-    protected bool $exclusive = false;
+    protected string $identifier;
 
     /**
      * Full name of the key in etcd (prefix + key)
@@ -234,80 +225,77 @@ class Lock
     protected int $retries = 0;
 
     /**
-     * Automatically try to break the lock on destruct if possible
-     *
-     * @var bool
-     */
-    protected bool $breakOnDestruct = true;
-
-    /**
      * Create a lock
      *
      * @param string $key Can be anything, should describe the resource in a unique way
      * @param string|null $identifier An identifier for this lock, falls back to the default identifier if null
+     * @param int $time Timeout time of the lock in seconds. The lock will be released if this timeout is reached.
+     * @param bool $exclusive Is this lock exclusive (true) or shared (false)
+     * @param int $waitTime Time in seconds to wait for existing locks to be released.
+     * @param int|null $refreshTime Duration in seconds the timeout should be set to when refreshing the lock.
+     * If null the initial timeout will be used.
+     * @param int $refreshThreshold Maximum duration in seconds the existing lock may be valid for to be refreshed.
+     * If the lock is valid for longer than this time, the lock will not be refreshed.
+     * @param bool $breakOnDestruct Automatically try to break the lock on destruct if possible
      */
-    public function __construct(string $key, ?string $identifier = null)
+    public function __construct(
+        protected string $key,
+        ?string $identifier = null,
+        protected bool $exclusive = false,
+        protected int $time = 120,
+        protected int $waitTime = 300,
+        protected ?int $refreshTime = null,
+        protected int $refreshThreshold = 30,
+        protected bool $breakOnDestruct = true,
+    )
     {
-        $this->key = $key;
         $this->etcdKey = static::$prefix . $this->key;
 
         if (static::$defaultIdentifier === null) {
             static::setDefaultIdentifier();
         }
 
-        if ($identifier === null) {
-            $this->identifier = static::$defaultIdentifier;
-        } else {
-            $this->identifier = $identifier;
-        }
+        $this->identifier = $identifier ?? static::$defaultIdentifier;
     }
 
     /**
      * Try to acquire lock
      *
-     * @param bool $exclusive
-     * @param int $time
-     * @param int $wait
-     * @param string|null $identifier
-     * @return bool
+     * @return bool true if the lock was acquired, false if it was not
      * @throws InvalidResponseStatusCodeException
      * @throws TooManySaveRetriesException
      */
-    public function lock(bool $exclusive = false, int $time = 120, int $wait = 300, ?string $identifier = null): bool
+    public function lock(): bool
     {
-        $this->exclusive = $exclusive;
-        $this->time = $time;
-
-        if ($identifier !== null) {
-            $this->identifier = $identifier;
-        }
-
         $this->retries = 0;
 
         do {
-            $this->waitForOtherLocks($wait, $exclusive);
+            $this->waitForOtherLocks();
             $retry = false;
             if ($this->canLock()) {
-                $retry = !$this->addOrUpdateLock();
+                $retry = !$this->addOrUpdateLock($this->time);
             }
         } while ($retry);
 
-        return !!$this->isLocked();
+        return $this->isLocked();
     }
 
     /**
-     * @param int $wait
-     * @param bool $exclusive
+     * Wait for other locks to be released. This method will only wait if the timeout of the existing lock ends within
+     * the specified wait time. If the timeout of the existing lock ends after the wait time, this method will return
+     * immediately, even though the lock holder might voluntarily break the lock before the timeout.
+     *
+     * @param int|null $waitTime maximum time in seconds to wait for other locks
      * @return bool
      * @throws InvalidResponseStatusCodeException
      */
-    public function waitForOtherLocks(int $wait = 300, bool $exclusive = false): bool
+    public function waitForOtherLocks(?int $waitTime = null): bool
     {
+        $waitTime ??= $this->waitTime;
         $startTime = time();
-        $this->exclusive = $exclusive;
         $this->update();
 
-        while (!$this->canLock() && $startTime + $wait > time()) {
+        while (!$this->canLock() && $startTime + $waitTime > time()) {
             sleep(static::$waitRetryInterval);
             $this->update();
         }
@@ -318,33 +306,53 @@ class Lock
     /**
      * Check if is locked and returns time until lock runs out or false
      *
-     * @return bool|int
+     * @return bool
      */
-    public function isLocked(): bool|int
+    public function isLocked(): bool
+    {
+        return $this->getRemainingLockDuration() > 0;
+    }
+
+    /**
+     * Get the time until the lock runs out. This method will return -1 if the lock is not valid or other negative values
+     * if the lock has already run out.
+     *
+     * @return int
+     */
+    public function getRemainingLockDuration(): int
     {
         foreach ($this->locks as $lock) {
             if ($lock->isBy($this->identifier)) {
-                $remaining = $lock->getRemainingTime();
-                return ($remaining > 0) ? $remaining : false;
+                return $lock->getRemainingTime();
             }
         }
 
-        return false;
+        return -1;
+    }
+
+    /**
+     * Get the unique key for the resource
+     * @return string
+     */
+    public function getKey(): string
+    {
+        return $this->key;
     }
 
     /**
      * Set the identifier for this lock, falls back to the default identifier if null
      *
      * @param string|null $identifier
-     * @return void
+     * @return $this
      */
-    public function setIdentifier(?string $identifier): void
+    public function setIdentifier(?string $identifier): static
     {
         if ($identifier === null) {
             $this->identifier = static::$defaultIdentifier;
         } else {
             $this->identifier = $identifier;
         }
+        return $this;
     }
 
     /**
@@ -361,29 +369,132 @@ class Lock
      * Dis/enable automatic lock break on object destruct
      *
      * @param bool $breakOnDestruct
+     * @return $this
      */
-    public function setBreakOnDestruct(bool $breakOnDestruct): void
+    public function setBreakOnDestruct(bool $breakOnDestruct): static
     {
         $this->breakOnDestruct = $breakOnDestruct;
+        return $this;
+    }
+
+    /**
+     * Set the timeout time of the lock. The lock will be released if this timeout is reached.
+     * @param int $time time in seconds
+     * @return $this
+     */
+    public function setTime(int $time): static
+    {
+        $this->time = $time;
+        return $this;
+    }
+
+    /**
+     * Get the timeout time of the lock in seconds. The lock will be released if this timeout is reached.
+     * @return int
+     */
+    public function getTime(): int
+    {
+        return $this->time;
+    }
+
+    /**
+     * Is this lock exclusive (true) or shared (false)
+     * @return bool
+     */
+    public function isExclusive(): bool
+    {
+        return $this->exclusive;
+    }
+
+    /**
+     * Make this lock exclusive (true) or shared (false)
+     * @param bool $exclusive
+     * @return $this
+     */
+    public function setExclusive(bool $exclusive): static
+    {
+        $this->exclusive = $exclusive;
+        return $this;
+    }
+
+    /**
+     * Get the wait time in seconds to wait for existing locks to be released.
+     * @return int
+     */
+    public function getWaitTime(): int
+    {
+        return $this->waitTime;
+    }
+
+    /**
+     * Set the wait time in seconds to wait for existing locks to be released.
+     * @param int $waitTime
+     * @return $this
+     */
+    public function setWaitTime(int $waitTime): static
+    {
+        $this->waitTime = $waitTime;
+        return $this;
+    }
+
+    /**
+     * Duration in seconds the timeout should be set to when refreshing the lock.
+     * If null the initial timeout will be used.
+     * @return int|null
+     */
+    public function getRefreshTime(): ?int
+    {
+        return $this->refreshTime;
+    }
+
+    /**
+     * Duration in seconds the timeout should be set to when refreshing the lock.
+     * If null the initial timeout will be used.
+     * @param int|null $refreshTime
+     * @return $this
+     */
+    public function setRefreshTime(?int $refreshTime): static
+    {
+        $this->refreshTime = $refreshTime;
+        return $this;
+    }
+
+    /**
+     * Maximum duration in seconds the existing lock may be valid for to be refreshed. If the lock is valid for longer
+     * than this time, the lock will not be refreshed.
+     * @return int
+     */
+    public function getRefreshThreshold(): int
+    {
+        return $this->refreshThreshold;
+    }
+
+    /**
+     * Maximum duration in seconds the existing lock may be valid for to be refreshed. If the lock is valid for longer
+     * than this time, the lock will not be refreshed.
+     * @param int $refreshThreshold
+     * @return $this
+     */
+    public function setRefreshThreshold(int $refreshThreshold): static
+    {
+        $this->refreshThreshold = $refreshThreshold;
+        return $this;
     }
 
     /**
      * Refresh the lock
      *
-     * @param int $time Time until the lock should be released automatically
-     * @param int $remainingThreshold The lock will only be refreshed if the remaining time is below this threshold (0 to disable)
      * @return boolean
      * @throws InvalidResponseStatusCodeException
      * @throws TooManySaveRetriesException
      */
-    public function refresh(int $time = 60, int $remainingThreshold = 30): bool
+    public function refresh(): bool
     {
-        if ($remainingThreshold > 0 && $this->isLocked() > $remainingThreshold) {
+        if ($this->refreshThreshold > 0 && $this->getRemainingLockDuration() > $this->refreshThreshold) {
             return true;
         }
 
         $this->update();
-        $this->time = $time;
         $this->retries = 0;
 
         do {
@@ -391,7 +502,7 @@ class Lock
                 return false;
             }
 
-            $retry = !$this->addOrUpdateLock();
+            $retry = !$this->addOrUpdateLock($this->refreshTime ?? $this->time);
         } while ($retry);
         return true;
     }
@@ -401,26 +512,19 @@ class Lock
      *
      * Should be only used if you have the lock
      *
-     * @return boolean
+     * @return void
      * @throws InvalidResponseStatusCodeException
      * @throws TooManySaveRetriesException
      */
-    public function break(): bool
+    public function break(): void
     {
+        if (!$this->isLocked()) {
+            return;
+        }
+
         $this->update();
         $this->retries = 0;
         $this->removeLock();
-
-        return true;
-    }
-
-    /**
-     * Get the unique key for the resource
-     * @return string
-     */
-    public function getKey(): string
-    {
-        return $this->key;
     }
 
     /**
@@ -436,11 +540,11 @@ class Lock
     /**
      * Remove a lock from the locking array and save the locks
      *
-     * @return bool
+     * @return void
      * @throws InvalidResponseStatusCodeException
      * @throws TooManySaveRetriesException
      */
-    protected function removeLock(): bool
+    protected function removeLock(): void
     {
         do {
             foreach ($this->locks as $i => $lock) {
@@ -450,7 +554,6 @@ class Lock
             }
             $success = $this->saveLocks();
         } while ($success === false);
-        return true;
     }
 
     /**
@@ -458,15 +561,16 @@ class Lock
      *
      * A 'false' return value can/should be retried, see Lock::saveLocks()
      *
+     * @param int $time
      * @return bool
      * @throws InvalidResponseStatusCodeException
      * @throws TooManySaveRetriesException
      */
-    protected function addOrUpdateLock(): bool
+    protected function addOrUpdateLock(int $time): bool
     {
         foreach ($this->locks as $lock) {
             if ($lock->isBy($this->identifier)) {
-                $lock->setRemaining($this->time);
+                $lock->setRemaining($time);
                 return $this->saveLocks();
             }
         }
@@ -554,20 +658,6 @@ class Lock
     }
 
     /**
-     * Get an Aternos\Etcd\Client instance
-     *
-     * @return ClientInterface
-     */
-    protected function getClient(): ClientInterface
-    {
-        if (static::$client === null) {
-            static::$client = new Client();
-        }
-
-        return static::$client;
-    }
-
-    /**
      * Check if it is possible to lock
      *
      * @return bool
@@ -591,8 +681,9 @@ class Lock
      * Update the locks array from etcd
      *
      * @throws InvalidResponseStatusCodeException
+     * @return $this
      */
-    public function update(): void
+    public function update(): static
     {
         $etcdLockString = false;
         for ($i = 1; $i <= static::$maxUnavailableRetries; $i++) {
@@ -609,15 +700,16 @@ class Lock
             }
         }
 
-        $this->updateFromString($etcdLockString);
+        return $this->updateFromString($etcdLockString);
     }
 
     /**
      * Update the locks array from a JSON string
      *
      * @param string|bool $lockString
+     * @return $this
      */
-    protected function updateFromString(string|bool $lockString): void
+    protected function updateFromString(string|bool $lockString): static
     {
         $this->previousLockString = $lockString;
 
@@ -626,6 +718,8 @@ class Lock
         } else {
             $this->locks = [];
         }
+
+        return $this;
     }
 
     /**
@@ -636,7 +730,7 @@ class Lock
      */
     public function __destruct()
     {
-        if ($this->breakOnDestruct && $this->isLocked()) {
+        if ($this->breakOnDestruct) {
             $this->break();
         }
     }
