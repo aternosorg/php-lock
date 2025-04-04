@@ -69,10 +69,28 @@ class LockTest extends TestCase
         $this->assertTrue($lock->isLocked() > 0);
         $lock->break();
         $this->assertFalse($lock->isLocked());
+    }
 
-        // Check that calling break again does not throw an error
-        $lock->break();
-        $this->assertFalse($lock->isLocked());
+    public function testBreakLockTwice(): void
+    {
+        # Check that break() and isLocked() are called when breakOnDestruct is set to true
+        $breakingLock = $this->getMockBuilder(Lock::class)
+            ->setConstructorArgs([$this->getRandomString()])
+            ->onlyMethods(['removeLock', 'isLocked'])
+            ->getMock();
+        $breakingLock->setBreakOnDestruct(true);
+        $breakingLock
+            ->expects($this->once())
+            ->method('removeLock');
+        $breakingLock
+            ->expects($this->exactly(3))
+            ->method('isLocked')
+            ->willReturn(true, true, false);
+
+        $breakingLock->lock();
+
+        $breakingLock->break();
+        $breakingLock->break();
     }
 
     /**
@@ -407,13 +425,9 @@ class LockTest extends TestCase
         # Check that break() and isLocked() are called when breakOnDestruct is set to true
         $breakingLock = $this->getMockBuilder(Lock::class)
             ->setConstructorArgs([$this->getRandomString()])
-            ->onlyMethods(['isLocked', 'break'])
+            ->onlyMethods(['break'])
             ->getMock();
         $breakingLock->setBreakOnDestruct(true);
-        $breakingLock
-            ->expects($this->once())
-            ->method('isLocked')
-            ->willReturn(true);
         $breakingLock
             ->expects($this->once())
             ->method('break');
