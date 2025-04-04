@@ -494,6 +494,10 @@ class Lock implements LockInterface
      */
     public function break(): void
     {
+        if (!$this->isLocked()) {
+            return;
+        }
+
         $this->update();
         $this->retries = 0;
         $this->removeLock();
@@ -512,11 +516,11 @@ class Lock implements LockInterface
     /**
      * Remove a lock from the locking array and save the locks
      *
-     * @return bool
+     * @return void
      * @throws InvalidResponseStatusCodeException
      * @throws TooManySaveRetriesException
      */
-    protected function removeLock(): bool
+    protected function removeLock(): void
     {
         do {
             foreach ($this->locks as $i => $lock) {
@@ -526,7 +530,6 @@ class Lock implements LockInterface
             }
             $success = $this->saveLocks();
         } while ($success === false);
-        return true;
     }
 
     /**
@@ -717,7 +720,7 @@ class Lock implements LockInterface
      */
     public function __destruct()
     {
-        if ($this->breakOnDestruct && $this->isLocked()) {
+        if ($this->breakOnDestruct) {
             $this->break();
         }
     }

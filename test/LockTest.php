@@ -69,6 +69,10 @@ class LockTest extends TestCase
         $this->assertTrue($lock->isLocked() > 0);
         $lock->break();
         $this->assertFalse($lock->isLocked());
+
+        // Check that calling break again does not throw an error
+        $lock->break();
+        $this->assertFalse($lock->isLocked());
     }
 
     /**
@@ -527,8 +531,8 @@ class PublicLock extends Lock
         return parent::addOrUpdateLock($time);
     }
 
-    public function removeLock(): bool
+    public function removeLock(): void
     {
-        return parent::removeLock();
+        parent::removeLock();
     }
 }
