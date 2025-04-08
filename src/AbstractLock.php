@@ -116,23 +116,22 @@ abstract class AbstractLock implements LockInterface
     }
 
     /**
-     * If true the lock will be broken automatically on destruct
+     * Is this lock exclusive (true) or shared (false)
      * @return bool
      */
-    public function shouldBreakOnDestruct(): bool
+    public function isExclusive(): bool
     {
-        return $this->breakOnDestruct;
+        return $this->exclusive;
     }
 
     /**
-     * Dis/enable automatic lock break on object destruct
-     *
-     * @param bool $breakOnDestruct
+     * Make this lock exclusive (true) or shared (false)
+     * @param bool $exclusive
      * @return $this
      */
-    public function setBreakOnDestruct(bool $breakOnDestruct): static
+    public function setExclusive(bool $exclusive): static
     {
-        $this->breakOnDestruct = $breakOnDestruct;
+        $this->exclusive = $exclusive;
         return $this;
     }
 
@@ -153,26 +152,6 @@ abstract class AbstractLock implements LockInterface
     public function setTime(int $time): static
     {
         $this->time = $time;
-        return $this;
-    }
-
-    /**
-     * Is this lock exclusive (true) or shared (false)
-     * @return bool
-     */
-    public function isExclusive(): bool
-    {
-        return $this->exclusive;
-    }
-
-    /**
-     * Make this lock exclusive (true) or shared (false)
-     * @param bool $exclusive
-     * @return $this
-     */
-    public function setExclusive(bool $exclusive): static
-    {
-        $this->exclusive = $exclusive;
         return $this;
     }
 
@@ -237,6 +216,27 @@ abstract class AbstractLock implements LockInterface
     public function setRefreshThreshold(int $refreshThreshold): static
     {
         $this->refreshThreshold = $refreshThreshold;
+        return $this;
+    }
+
+    /**
+     * If true the lock will be broken automatically on destruct
+     * @return bool
+     */
+    public function shouldBreakOnDestruct(): bool
+    {
+        return $this->breakOnDestruct;
+    }
+
+    /**
+     * Dis/enable automatic lock break on object destruct
+     *
+     * @param bool $breakOnDestruct
+     * @return $this
+     */
+    public function setBreakOnDestruct(bool $breakOnDestruct): static
+    {
+        $this->breakOnDestruct = $breakOnDestruct;
         return $this;
     }
 
