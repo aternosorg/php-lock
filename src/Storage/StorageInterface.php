@@ -17,12 +17,12 @@ interface StorageInterface
      * @param string|null $previousValue The previous value to compare against. If null is provided, the comparison
      * should check that the key does not exist yet.
      * @param bool $returnNewValueOnFail if true the new value of the key should be returned if the operation fails
-     * @return bool|string true if the operation succeeded, false if it failed and `$returnNewValueOnFail` is false,
-     * otherwise the new value of the key
+     * @return bool|string|null true if the operation succeeded, false if it failed and `$returnNewValueOnFail` is
+     * false, otherwise the new value of the key
      * @throws StorageException a known, retryable error occurred
      * @throws Exception an unknown error occurred
      */
-    public function putIf(string $key, string $value, ?string $previousValue, bool $returnNewValueOnFail): bool|string;
+    public function putIf(string $key, string $value, ?string $previousValue, bool $returnNewValueOnFail): bool|string|null;
 
     /**
      * Delete if $key value matches $previous value otherwise $returnNewValueOnFail
@@ -31,12 +31,12 @@ interface StorageInterface
      * @param string|null $previousValue The previous value to compare against. If null is provided, the comparison
      *  should check that the key does not exist yet.
      * @param bool $returnNewValueOnFail
-     * @return bool|string true if the operation succeeded, false if it failed and `$returnNewValueOnFail` is false,
-     * otherwise the new value of the key
+     * @return bool|string|null true if the operation succeeded, false if it failed and `$returnNewValueOnFail` is
+     * false, otherwise the new value of the key
      * @throws StorageException a known, retryable error occurred
      * @throws Exception an unknown error occurred
      */
-    public function deleteIf(string $key, ?string $previousValue, bool $returnNewValueOnFail = false): bool|string;
+    public function deleteIf(string $key, ?string $previousValue, bool $returnNewValueOnFail = false): bool|string|null;
 
     /**
      * Get the value of a key

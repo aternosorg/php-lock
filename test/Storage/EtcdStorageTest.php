@@ -31,9 +31,9 @@ class EtcdStorageTest extends TestCase
 
     #[TestWith(['previous_value', false])]
     #[TestWith(['previous_value', true])]
-    #[TestWith(['previous_value', "real-previous-value"])]
     #[TestWith([null, false])]
-    public function testPutIf(?string $previousValue, bool|string $result): void
+    #[TestWith([null, true])]
+    public function testPutIf(?string $previousValue, bool $result): void
     {
         $key = 'test_key';
         $value = 'test_value';
@@ -43,7 +43,28 @@ class EtcdStorageTest extends TestCase
             ->with($this->equalTo($key), $this->equalTo($value), $this->equalToEtcdValue($previousValue))
             ->willReturn($result);
 
-        $this->assertEquals($result, $this->storage->putIf($key, $value, $previousValue));
+        $this->assertSame($result, $this->storage->putIf($key, $value, $previousValue));
+    }
+
+    #[TestWith(['previous_value', false, null])]
+    #[TestWith(['previous_value', true, true])]
+    #[TestWith([null, 'real_value', 'real_value'])]
+    #[TestWith([null, true, true])]
+    public function testPutIfReturnValue(
+        ?string $previousValue,
+        bool|string $etcdResponse,
+        bool|string|null $expected,
+    ): void
+    {
+        $key = 'test_key';
+        $value = 'test_value';
+
+
+        $this->client->method('putIf')
+            ->with($this->equalTo($key), $this->equalTo($value), $this->equalToEtcdValue($previousValue))
+            ->willReturn($etcdResponse);
+
+        $this->assertSame($expected, $this->storage->putIf($key, $value, $previousValue, true));
     }
 
     public function testPutIfStorageException(): void
@@ -78,8 +99,8 @@ class EtcdStorageTest extends TestCase
 
     #[TestWith(['previous_value', false])]
     #[TestWith(['previous_value', true])]
-    #[TestWith(['previous_value', "real-previous-value"])]
     #[TestWith([null, false])]
+    #[TestWith([null, true])]
     public function testDeleteIf(?string $previousValue, bool|string $result): void
     {
         $key = 'test_key';
@@ -88,7 +109,26 @@ class EtcdStorageTest extends TestCase
             ->with($this->equalTo($key), $this->equalToEtcdValue($previousValue))
             ->willReturn($result);
 
-        $this->assertEquals($result, $this->storage->deleteIf($key, $previousValue));
+        $this->assertSame($result, $this->storage->deleteIf($key, $previousValue));
+    }
+
+    #[TestWith(['previous_value', false, null])]
+    #[TestWith(['previous_value', true, true])]
+    #[TestWith([null, 'real_value', 'real_value'])]
+    #[TestWith([null, true, true])]
+    public function testDeleteIfReturnValue(
+        ?string $previousValue,
+        bool|string $etcdResponse,
+        bool|string|null $expected,
+    ): void
+    {
+        $key = 'test_key';
+
+        $this->client->method('deleteIf')
+            ->with($this->equalTo($key), $this->equalToEtcdValue($previousValue))
+            ->willReturn($etcdResponse);
+
+        $this->assertSame($expected, $this->storage->deleteIf($key, $previousValue, true));
     }
 
     public function testDeleteIfStorageException(): void
@@ -129,7 +169,7 @@ class EtcdStorageTest extends TestCase
             ->with($this->equalTo($key))
             ->willReturn($value ?? false);
 
-        $this->assertEquals($value, $this->storage->get($key));
+        $this->assertSame($value, $this->storage->get($key));
     }
 
     public function testGStorageException(): void
