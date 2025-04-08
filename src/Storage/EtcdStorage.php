@@ -17,7 +17,7 @@ class EtcdStorage implements StorageInterface
         $this->client = $client ?? new Client();
     }
 
-    public function putIf(string $key, string $value, ?string $previousValue, bool $returnNewValueOnFail): bool|string
+    public function putIf(string $key, string $value, ?string $previousValue, bool $returnNewValueOnFail = false): bool|string
     {
         try {
             return $this->client->putIf($key, $value, $previousValue ?? false, $returnNewValueOnFail);
