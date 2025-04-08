@@ -17,24 +17,35 @@ class EtcdStorage implements StorageInterface
         $this->client = $client ?? new Client();
     }
 
-    public function putIf(string $key, string $value, ?string $previousValue, bool $returnNewValueOnFail = false): bool|string
+    public function putIf(string $key, string $value, ?string $previousValue, bool $returnNewValueOnFail = false): bool|string|null
     {
         try {
-            return $this->client->putIf($key, $value, $previousValue ?? false, $returnNewValueOnFail);
+            $result = $this->client->putIf($key, $value, $previousValue ?? false, $returnNewValueOnFail);
         } catch (UnavailableException | DeadlineExceededException | UnknownException $e) {
             throw new StorageException($e->getMessage(), $e->getCode(), $e);
         }
+
+        if ($returnNewValueOnFail && $result === false) {
+            return null;
+        }
+
+        return $result;
     }
 
-    public function deleteIf(string $key, ?string $previousValue, bool $returnNewValueOnFail = false): bool|string
+    public function deleteIf(string $key, ?string $previousValue, bool $returnNewValueOnFail = false): bool|string|null
     {
         try {
-            return $this->client->deleteIf($key, $previousValue ?? false, $returnNewValueOnFail);
+            $result = $this->client->deleteIf($key, $previousValue ?? false, $returnNewValueOnFail);
         } catch (UnavailableException | DeadlineExceededException | UnknownException $e) {
             throw new StorageException($e->getMessage(), $e->getCode(), $e);
         }
-    }
 
+        if ($returnNewValueOnFail && $result === false) {
+            return null;
+        }
+
+        return $result;
+    }
 
     public function get(string $key): ?string
     {
