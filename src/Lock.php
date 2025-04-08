@@ -190,8 +190,8 @@ class Lock extends AbstractLock
      * @param int $waitTime Time in seconds to wait for existing locks to be released.
      * @param int|null $refreshTime Duration in seconds the timeout should be set to when refreshing the lock.
      * If null the initial timeout will be used.
-     * @param int $refreshThreshold Maximum duration in seconds the existing lock may be valid for to be refreshed.
-     * If the lock is valid for longer than this time, the lock will not be refreshed.
+     * @param float $refreshThreshold Maximum percentage of the refreshTime the existing lock may still be valid for
+     * to be refreshed. If the lock is valid for longer than this time, it won't be refreshed.
      * @param bool $breakOnDestruct Automatically try to break the lock on destruct if possible
      */
     public function __construct(
@@ -201,7 +201,7 @@ class Lock extends AbstractLock
         int $time = 120,
         int $waitTime = 300,
         ?int $refreshTime = null,
-        int $refreshThreshold = 30,
+        float $refreshThreshold = 0.5,
         bool $breakOnDestruct = true,
     )
     {
@@ -280,7 +280,7 @@ class Lock extends AbstractLock
      */
     public function refresh(): bool
     {
-        if ($this->refreshThreshold > 0 && $this->getRemainingLockDuration() > $this->refreshThreshold) {
+        if (!$this->shouldRefresh()) {
             return true;
         }
 
@@ -292,7 +292,7 @@ class Lock extends AbstractLock
                 return false;
             }
 
-            $retry = !$this->addOrUpdateLock($this->refreshTime ?? $this->time);
+            $retry = !$this->addOrUpdateLock($this->getEffectiveRefreshTime());
         } while ($retry);
         return true;
     }
@@ -325,6 +325,21 @@ class Lock extends AbstractLock
     protected function generateLock(): LockEntry
     {
         return new LockEntry($this->identifier, time() + $this->time, $this->exclusive);
+    }
+
+    /**
+     * Returns true, if the remaining lock duration is less than the refresh threshold.
+     * @return bool
+     */
+    protected function shouldRefresh(): bool
+    {
+        if ($this->refreshThreshold <= 0) {
+            return true;
+        }
+
+        $remaining = $this->getRemainingLockDuration();
+        $threshold = $this->refreshThreshold * $this->getEffectiveRefreshTime();
+        return $remaining < $threshold;
     }
 
     /**

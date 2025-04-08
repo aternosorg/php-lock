@@ -113,30 +113,45 @@ class LockTest extends TestCase
         $this->assertEquals(5, $lock->getRefreshTime());
     }
 
+    public function testGetEffectiveRefreshTime(): void
+    {
+        $lock = new Lock("key");
+        $this->assertEquals(120, $lock->getEffectiveRefreshTime());
+
+        $lock = new Lock("key", time: 10);
+        $this->assertEquals(10, $lock->getEffectiveRefreshTime());
+
+        $lock = new Lock("key", "identifier", false, 10, 0, 5);
+        $this->assertEquals(5, $lock->getEffectiveRefreshTime());
+    }
+
     public function testSetRefreshTime(): void
     {
         $lock = new Lock("key");
         $this->assertEquals(null, $lock->getRefreshTime());
+        $this->assertEquals(120, $lock->getEffectiveRefreshTime());
         $lock->setRefreshTime(5);
         $this->assertEquals(5, $lock->getRefreshTime());
+        $this->assertEquals(5, $lock->getEffectiveRefreshTime());
         $lock->setRefreshTime(null);
         $this->assertEquals(null, $lock->getRefreshTime());
+        $this->assertEquals(120, $lock->getEffectiveRefreshTime());
     }
 
     public function testGetRefreshThreshold(): void
     {
         $lock = new Lock("key");
-        $this->assertEquals(30, $lock->getRefreshThreshold());
-        $lock = new Lock("key", "identifier", false, 10, 0, 5, 2);
-        $this->assertEquals(2, $lock->getRefreshThreshold());
+        $this->assertEquals(0.5, $lock->getRefreshThreshold());
+        $lock = new Lock("key", "identifier", false, 10, 0, 5, 0.25);
+        $this->assertEquals(0.25, $lock->getRefreshThreshold());
     }
 
     public function testSetRefreshThreshold(): void
     {
         $lock = new Lock("key");
-        $this->assertEquals(30, $lock->getRefreshThreshold());
-        $lock->setRefreshThreshold(5);
-        $this->assertEquals(5, $lock->getRefreshThreshold());
+        $this->assertEquals(0.5, $lock->getRefreshThreshold());
+        $lock->setRefreshThreshold(0.25);
+        $this->assertEquals(0.25, $lock->getRefreshThreshold());
     }
 
     public function testShouldBreakOnDestruct(): void
@@ -248,7 +263,7 @@ class LockTest extends TestCase
         $key = $this->getRandomString();
         $identifier = $this->getRandomString();
 
-        $lock = new Lock($key, $identifier, false, 10, 0, refreshThreshold: 5);
+        $lock = new Lock($key, $identifier, false, 10, 0, refreshThreshold: 0.5);
         $lock->lock();
         $this->assertTrue($lock->isLocked());
         sleep(3);

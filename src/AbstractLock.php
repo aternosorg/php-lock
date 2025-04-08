@@ -62,8 +62,8 @@ abstract class AbstractLock implements LockInterface
      * @param int $waitTime Time in seconds to wait for existing locks to be released.
      * @param int|null $refreshTime Duration in seconds the timeout should be set to when refreshing the lock.
      * If null the initial timeout will be used.
-     * @param int $refreshThreshold Maximum duration in seconds the existing lock may be valid for to be refreshed.
-     * If the lock is valid for longer than this time, the lock will not be refreshed.
+     * @param float $refreshThreshold Maximum percentage of the refreshTime the existing lock may still be valid for
+     * to be refreshed. If the lock is valid for longer than this time, it won't be refreshed.
      * @param bool $breakOnDestruct Automatically try to break the lock on destruct if possible
      */
     public function __construct(
@@ -73,7 +73,7 @@ abstract class AbstractLock implements LockInterface
         protected int $time = 120,
         protected int $waitTime = 300,
         protected ?int $refreshTime = null,
-        protected int $refreshThreshold = 30,
+        protected float $refreshThreshold = 0.5,
         protected bool $breakOnDestruct = true,
     )
     {
@@ -187,6 +187,16 @@ abstract class AbstractLock implements LockInterface
 
     /**
      * Duration in seconds the timeout should be set to when refreshing the lock.
+     * Same as {@link AbstractLock::getRefreshTime()} except that the lock time is used if the refresh time was not set.
+     * @return int
+     */
+    public function getEffectiveRefreshTime(): int
+    {
+        return $this->refreshTime ?? $this->time;
+    }
+
+    /**
+     * Duration in seconds the timeout should be set to when refreshing the lock.
      * If null the initial timeout will be used.
      * @param int|null $refreshTime
      * @return $this
@@ -198,22 +208,22 @@ abstract class AbstractLock implements LockInterface
     }
 
     /**
-     * Maximum duration in seconds the existing lock may be valid for to be refreshed. If the lock is valid for longer
-     * than this time, the lock will not be refreshed.
-     * @return int
+     * Maximum percentage of the refreshTime the existing lock may still be valid for to be refreshed. If the lock is
+     * valid for longer than this time, it won't be refreshed.
+     * @return float
      */
-    public function getRefreshThreshold(): int
+    public function getRefreshThreshold(): float
     {
         return $this->refreshThreshold;
     }
 
     /**
-     * Maximum duration in seconds the existing lock may be valid for to be refreshed. If the lock is valid for longer
-     * than this time, the lock will not be refreshed.
-     * @param int $refreshThreshold
+     * Maximum percentage of the refreshTime the existing lock may still be valid for to be refreshed. If the lock is
+     * valid for longer than this time, it won't be refreshed.
+     * @param float $refreshThreshold
      * @return $this
      */
-    public function setRefreshThreshold(int $refreshThreshold): static
+    public function setRefreshThreshold(float $refreshThreshold): static
     {
         $this->refreshThreshold = $refreshThreshold;
         return $this;
