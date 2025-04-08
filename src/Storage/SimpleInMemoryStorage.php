@@ -10,6 +10,15 @@ class SimpleInMemoryStorage implements StorageInterface
 {
     protected array $storage = [];
 
+    /**
+     * Clear the current storage, e.g. to clean up after a test
+     * @return void
+     */
+    public function clear(): void
+    {
+        $this->storage = [];
+    }
+
     public function putIf(string $key, string $value, ?string $previousValue, bool $returnNewValueOnFail = false): bool|string|null
     {
         $realValue = $this->get($key);

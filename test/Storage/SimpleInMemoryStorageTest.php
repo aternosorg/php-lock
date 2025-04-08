@@ -93,6 +93,13 @@ class SimpleInMemoryStorageTest extends TestCase
         $this->assertEquals($realValue, $this->storage->deleteIf("key", $previousValue, true));
         $this->assertEquals($realValue, $this->storage->get("key"));
     }
+
+    public function testClear(): void
+    {
+        $this->assertTrue($this->storage->putIf("key", "value", null));
+        $this->storage->clear();
+        $this->assertNull($this->storage->get("key"));
+    }
 }
 
 class PublicSimpleInMemoryStorage extends SimpleInMemoryStorage
