@@ -190,8 +190,8 @@ class Lock extends AbstractLock
      * @param int $waitTime Time in seconds to wait for existing locks to be released.
      * @param int|null $refreshTime Duration in seconds the timeout should be set to when refreshing the lock.
      * If null the initial timeout will be used.
-     * @param float $refreshThreshold Maximum duration in seconds the existing lock may be valid for to be refreshed.
-     * If the lock is valid for longer than this time, the lock will not be refreshed.
+     * @param float $refreshThreshold Maximum percentage of the refreshTime the existing lock may still be valid for
+     * to be refreshed. If the lock is valid for longer than this time, it won't be refreshed.
      * @param bool $breakOnDestruct Automatically try to break the lock on destruct if possible
      */
     public function __construct(
