@@ -92,9 +92,9 @@ abstract class AbstractLock implements LockInterface
     /**
      * Get the used identifier for this lock
      *
-     * @return string|null
+     * @return string
      */
-    public function getIdentifier(): ?string
+    public function getIdentifier(): string
     {
         return $this->identifier;
     }
