@@ -12,8 +12,8 @@ jobs:
 
     strategy:
       matrix:
-        php-version: [ '8.3', '8.4' ]
-        etcd-version: [ '3.4.36', '3.5.21' ]
+        php-version: [ '8.5' ]
+        etcd-version: [ '3.5.21', '3.6.5' ]
 
     name: Run tests on PHP v${{ matrix.php-version }} with etcd v${{ matrix.etcd-version }}
 
@@ -44,7 +44,7 @@ jobs:
 
       - name: Set composer cache directory
         id: composer-cache
-        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
 
       - name: Restore composer from cache
         uses: actions/cache@v4

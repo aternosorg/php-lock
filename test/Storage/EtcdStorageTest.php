@@ -39,20 +39,20 @@ class EtcdStorageTest extends TestCase
         $value = 'test_value';
 
 
-        $this->client->method('putIf')
+        $this->client->expects($this->once())->method('putIf')
             ->with($this->equalTo($key), $this->equalTo($value), $this->equalToEtcdValue($previousValue))
             ->willReturn($result);
 
         $this->assertSame($result, $this->storage->putIf($key, $value, $previousValue));
     }
 
-    #[TestWith(['previous_value', false, null])]
+    #[TestWith(['previous_value', null, null])]
     #[TestWith(['previous_value', true, true])]
     #[TestWith([null, 'real_value', 'real_value'])]
     #[TestWith([null, true, true])]
     public function testPutIfReturnValue(
         ?string $previousValue,
-        bool|string $etcdResponse,
+        bool|string|null $etcdResponse,
         bool|string|null $expected,
     ): void
     {
@@ -60,7 +60,7 @@ class EtcdStorageTest extends TestCase
         $value = 'test_value';
 
 
-        $this->client->method('putIf')
+        $this->client->expects($this->once())->method('putIf')
             ->with($this->equalTo($key), $this->equalTo($value), $this->equalToEtcdValue($previousValue))
             ->willReturn($etcdResponse);
 
@@ -73,7 +73,7 @@ class EtcdStorageTest extends TestCase
         $value = 'test_value';
         $previousValue = 'previous_value';
 
-        $this->client->method('putIf')
+        $this->client->expects($this->once())->method('putIf')
             ->with($this->equalTo($key), $this->equalTo($value), $this->equalToEtcdValue($previousValue))
             ->willThrowException(new UnavailableException("Test exception"));
 
@@ -88,7 +88,7 @@ class EtcdStorageTest extends TestCase
         $value = 'test_value';
         $previousValue = 'previous_value';
 
-        $this->client->method('putIf')
+        $this->client->expects($this->once())->method('putIf')
             ->with($this->equalTo($key), $this->equalTo($value), $this->equalToEtcdValue($previousValue))
             ->willThrowException(new InvalidArgumentException("Test exception"));
 
@@ -105,26 +105,26 @@ class EtcdStorageTest extends TestCase
     {
         $key = 'test_key';
 
-        $this->client->method('deleteIf')
+        $this->client->expects($this->once())->method('deleteIf')
             ->with($this->equalTo($key), $this->equalToEtcdValue($previousValue))
             ->willReturn($result);
 
         $this->assertSame($result, $this->storage->deleteIf($key, $previousValue));
     }
 
-    #[TestWith(['previous_value', false, null])]
+    #[TestWith(['previous_value', null, null])]
     #[TestWith(['previous_value', true, true])]
     #[TestWith([null, 'real_value', 'real_value'])]
     #[TestWith([null, true, true])]
     public function testDeleteIfReturnValue(
         ?string $previousValue,
-        bool|string $etcdResponse,
+        bool|string|null $etcdResponse,
         bool|string|null $expected,
     ): void
     {
         $key = 'test_key';
 
-        $this->client->method('deleteIf')
+        $this->client->expects($this->once())->method('deleteIf')
             ->with($this->equalTo($key), $this->equalToEtcdValue($previousValue))
             ->willReturn($etcdResponse);
 
@@ -136,7 +136,7 @@ class EtcdStorageTest extends TestCase
         $key = 'test_key';
         $previousValue = 'previous_value';
 
-        $this->client->method('deleteIf')
+        $this->client->expects($this->once())->method('deleteIf')
             ->with($this->equalTo($key), $this->equalToEtcdValue($previousValue))
             ->willThrowException(new UnavailableException("Test exception"));
 
@@ -150,7 +150,7 @@ class EtcdStorageTest extends TestCase
         $key = 'test_key';
         $previousValue = 'previous_value';
 
-        $this->client->method('deleteIf')
+        $this->client->expects($this->once())->method('deleteIf')
             ->with($this->equalTo($key), $this->equalToEtcdValue($previousValue))
             ->willThrowException(new InvalidArgumentException("Test exception"));
 
@@ -165,9 +165,9 @@ class EtcdStorageTest extends TestCase
     {
         $key = 'test_key';
 
-        $this->client->method('get')
+        $this->client->expects($this->once())->method('get')
             ->with($this->equalTo($key))
-            ->willReturn($value ?? false);
+            ->willReturn($value);
 
         $this->assertSame($value, $this->storage->get($key));
     }
@@ -176,7 +176,7 @@ class EtcdStorageTest extends TestCase
     {
         $key = 'test_key';
 
-        $this->client->method('get')
+        $this->client->expects($this->once())->method('get')
             ->with($this->equalTo($key))
             ->willThrowException(new UnavailableException("Test exception"));
 
@@ -189,7 +189,7 @@ class EtcdStorageTest extends TestCase
     {
         $key = 'test_key';
 
-        $this->client->method('get')
+        $this->client->expects($this->once())->method('get')
             ->with($this->equalTo($key))
             ->willThrowException(new InvalidArgumentException("Test exception"));
 
