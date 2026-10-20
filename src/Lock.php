@@ -492,7 +492,7 @@ class Lock extends AbstractLock
      */
     public function update(): static
     {
-        $etcdLockString = false;
+        $etcdLockString = null;
         for ($i = 1; $i <= static::$maxUnavailableRetries; $i++) {
             try {
                 $etcdLockString = static::getStorage()->get($this->etcdKey);
