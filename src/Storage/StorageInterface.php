@@ -22,7 +22,7 @@ interface StorageInterface
      * @throws StorageException a known, retryable error occurred
      * @throws Exception an unknown error occurred
      */
-    public function putIf(string $key, string $value, ?string $previousValue, bool $returnNewValueOnFail): bool|string|null;
+    public function putIf(string $key, string $value, ?string $previousValue, bool $returnNewValueOnFail = false): bool|string|null;
 
     /**
      * Delete if $key value matches $previous value otherwise $returnNewValueOnFail
