@@ -82,7 +82,7 @@ class Lock extends AbstractLock
     }
 
     /**
-     * Set the prefix for all etcd keys (default "lock/")
+     * Set the prefix for all storage keys (default "lock/")
      *
      * @param string $prefix
      */
@@ -130,7 +130,7 @@ class Lock extends AbstractLock
     }
 
     /**
-     * Set the maximum retries in case of an UnavailableException from etcd
+     * Set the maximum retries in case of an UnavailableException from the underlying storage
      *
      * @param int $retries
      */
@@ -140,7 +140,7 @@ class Lock extends AbstractLock
     }
 
     /**
-     * Delay in seconds between retries in case of an UnavailableException from etcd
+     * Delay in seconds between retries in case of an UnavailableException from the underlying storage
      *
      * @param int $delayPerRetry
      */
@@ -150,17 +150,17 @@ class Lock extends AbstractLock
     }
 
     /**
-     * Full name of the key in etcd (prefix + key)
+     * Full name of the key in the underlying storage (prefix + key)
      *
      * @var string|null
      */
-    protected ?string $etcdKey = null;
+    protected ?string $storageKey = null;
 
     /**
      * Used to store the previous lock string
      *
      * Will be used in deleteIf and putIf requests to check
-     * if there was no change in etcd while processing the lock
+     * if there was no change in underlying storage while processing the lock
      *
      * @var string
      */
@@ -206,7 +206,7 @@ class Lock extends AbstractLock
     )
     {
         parent::__construct($key, $identifier, $exclusive, $time, $waitTime, $refreshTime, $refreshThreshold, $breakOnDestruct);
-        $this->etcdKey = static::$prefix . $this->key;
+        $this->storageKey = static::$prefix . $this->key;
     }
 
     /**
@@ -385,7 +385,7 @@ class Lock extends AbstractLock
     }
 
     /**
-     * Save the locks array in etcd
+     * Save the locks array
      *
      * A 'false' return value can/should be retried by calling the function again
      * An infinite loop is (hopefully) prevented by the retries counter, an exception
@@ -415,7 +415,7 @@ class Lock extends AbstractLock
         if (count($this->locks) === 0) {
             for ($i = 1; $i <= static::$maxUnavailableRetries; $i++) {
                 try {
-                    $result = static::getStorage()->deleteIf($this->etcdKey, $previousLocks, !$delayRetry);
+                    $result = static::getStorage()->deleteIf($this->storageKey, $previousLocks, !$delayRetry);
                     break;
                 } catch (StorageException $e) {
                     if ($i === static::$maxUnavailableRetries) {
@@ -431,7 +431,7 @@ class Lock extends AbstractLock
 
             for ($i = 1; $i <= static::$maxUnavailableRetries; $i++) {
                 try {
-                    $result = static::getStorage()->putIf($this->etcdKey, $lockString, $previousLocks, !$delayRetry);
+                    $result = static::getStorage()->putIf($this->storageKey, $lockString, $previousLocks, !$delayRetry);
                     break;
                 } catch (StorageException $e) {
                     if ($i === static::$maxUnavailableRetries) {
@@ -484,7 +484,7 @@ class Lock extends AbstractLock
     }
 
     /**
-     * Update the locks array from etcd
+     * Update the locks array
      *
      * @return $this
      * @throws StorageException
@@ -492,10 +492,10 @@ class Lock extends AbstractLock
      */
     public function update(): static
     {
-        $etcdLockString = null;
+        $lockString = null;
         for ($i = 1; $i <= static::$maxUnavailableRetries; $i++) {
             try {
-                $etcdLockString = static::getStorage()->get($this->etcdKey);
+                $lockString = static::getStorage()->get($this->storageKey);
                 break;
             } catch (StorageException $e) {
                 if ($i === static::$maxUnavailableRetries) {
@@ -507,7 +507,7 @@ class Lock extends AbstractLock
             }
         }
 
-        return $this->updateFromString($etcdLockString);
+        return $this->updateFromString($lockString);
     }
 
     /**
