@@ -108,7 +108,7 @@ abstract class AbstractLock implements LockInterface
     public function setIdentifier(?string $identifier): static
     {
         if ($identifier === null) {
-            $this->identifier = static::$defaultIdentifier;
+            $this->identifier = static::getDefaultIdentifier();
         } else {
             $this->identifier = $identifier;
         }
