@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         php-version: [ '8.5' ]
-        etcd-version: [ '3.5.21', '3.6.5' ]
+        etcd-version: [ '3.5.34', '3.6.15', '3.7.2' ]
 
     name: Run tests on PHP v${{ matrix.php-version }} with etcd v${{ matrix.etcd-version }}
 
