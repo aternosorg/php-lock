@@ -162,7 +162,7 @@ class Lock extends AbstractLock
      * Will be used in deleteIf and putIf requests to check
      * if there was no change in underlying storage while processing the lock
      *
-     * @var string
+     * @var string|null
      */
     protected ?string $previousLockString = null;
 
