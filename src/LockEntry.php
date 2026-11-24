@@ -13,11 +13,11 @@ class LockEntry implements \JsonSerializable
 {
     /**
      * @param stdClass $lockEntry
-     * @return LockEntry
+     * @return static
      */
-    public static function fromObject(stdClass $lockEntry): LockEntry
+    public static function fromObject(stdClass $lockEntry): static
     {
-        return new LockEntry(
+        return new static(
             $lockEntry->by ?? null,
             $lockEntry->until ?? null,
             $lockEntry->exclusive ?? null
@@ -26,7 +26,7 @@ class LockEntry implements \JsonSerializable
 
     /**
      * @param string $json
-     * @return LockEntry[]
+     * @return static[]
      */
     public static function fromJson(string $json): array
     {
@@ -124,9 +124,9 @@ class LockEntry implements \JsonSerializable
 
     /**
      * @param int|null $until
-     * @return LockEntry
+     * @return $this
      */
-    public function setUntil(?int $until): LockEntry
+    public function setUntil(?int $until): static
     {
         $this->until = $until;
         return $this;
@@ -136,7 +136,7 @@ class LockEntry implements \JsonSerializable
      * @param int $remaining
      * @return $this
      */
-    public function setRemaining(int $remaining): LockEntry
+    public function setRemaining(int $remaining): static
     {
         return $this->setUntil(time() + $remaining);
     }
